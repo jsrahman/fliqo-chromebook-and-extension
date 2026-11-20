@@ -45,10 +45,18 @@ export const FlipClock: React.FC<FlipClockProps> = ({ settings }) => {
     day: 'numeric',
   });
 
+  const overallScale = settings.scale ?? 1.0;
+  const scaleX = settings.scaleX ?? 1.0;
+  const scaleY = settings.scaleY ?? 1.0;
+  const totalScaleX = Number((overallScale * scaleX).toFixed(3));
+  const totalScaleY = Number((overallScale * scaleY).toFixed(3));
+
   return (
     <div
       className="clock-container"
-      style={{ transform: `scale(${settings.scale})` }}
+      style={{
+        transform: `scale(${totalScaleX}, ${totalScaleY})`,
+      }}
     >
       <div className="flip-clock">
         {/* Hours Card */}

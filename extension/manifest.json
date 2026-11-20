@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "Fliqlo Flip Clock Screensaver",
+  "version": "1.0.0",
+  "description": "Authentic split-flap flip clock screensaver for Chromebook and Chrome with automatic idle detection, power management, and instant toolbar settings.",
+  "permissions": [
+    "idle",
+    "storage",
+    "power"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Fliqlo Preferences",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "app/*",
+        "icons/*",
+        "popup.*",
+        "screensaver.html"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

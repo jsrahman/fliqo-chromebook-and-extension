@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fliqlo Preferences</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="popup-container">
+      <!-- Header -->
+      <div class="popup-header">
+        <div class="header-left">
+          <div class="logo-badge">FL</div>
+          <div>
+            <h1 class="logo-title">FLIQLO</h1>
+            <span class="logo-sub">Screen Saver Preferences</span>
+          </div>
+        </div>
+        <button id="btnLaunch" class="btn-launch" title="Preview / Run screensaver now">
+          ▶ Launch
+        </button>
+      </div>
+
+      <!-- Quick Launch / Idle Section -->
+      <div class="pref-section">
+        <span class="section-title">Chromebook Auto-Run</span>
+        <div class="pref-row">
+          <div class="label-group">
+            <span class="pref-title">Launch when Idle</span>
+            <span class="pref-desc">Auto open screensaver</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chkAutoLaunch" />
+            <span class="slider" />
+          </label>
+        </div>
+
+        <div class="pref-row" id="rowIdleTimeout">
+          <div class="label-group">
+            <span class="pref-title">Idle Timeout</span>
+            <span class="pref-desc">Minutes before screensaver starts</span>
+          </div>
+          <select id="selIdleTimeout" class="pref-select">
+            <option value="1">1 minute</option>
+            <option value="2">2 minutes</option>
+            <option value="5" selected>5 minutes</option>
+            <option value="10">10 minutes</option>
+            <option value="15">15 minutes</option>
+            <option value="30">30 minutes</option>
+          </select>
+        </div>
+
+        <div class="pref-row">
+          <div class="label-group">
+            <span class="pref-title">Keep Display Awake</span>
+            <span class="pref-desc">Prevent screen dimming</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chkKeepAwake" checked />
+            <span class="slider" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Time & Display Section -->
+      <div class="pref-section">
+        <span class="section-title">Time & Display</span>
+
+        <div class="pref-row">
+          <div class="label-group">
+            <span class="pref-title">Time Format</span>
+          </div>
+          <div class="segmented-control">
+            <button type="button" id="btn12h" class="segment-btn active">12-Hour</button>
+            <button type="button" id="btn24h" class="segment-btn">24-Hour</button>
+          </div>
+        </div>
+
+        <div class="pref-row" id="rowAmPm">
+          <div class="label-group">
+            <span class="pref-title">AM / PM Indicator</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chkAmPm" checked />
+            <span class="slider" />
+          </label>
+        </div>
+
+        <div class="pref-row">
+          <div class="label-group">
+            <span class="pref-title">Display Seconds</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chkSeconds" />
+            <span class="slider" />
+          </label>
+        </div>
+
+        <div class="pref-row">
+          <div class="label-group">
+            <span class="pref-title">Display Date</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chkDate" />
+            <span class="slider" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Scaling & Geometry Section -->
+      <div class="pref-section">
+        <div class="section-header-split">
+          <span class="section-title">Custom Scaling</span>
+          <button type="button" id="btnResetScale" class="btn-subtle">Reset</button>
+        </div>
+
+        <!-- Overall Scale -->
+        <div class="slider-row">
+          <div class="slider-labels">
+            <span class="slider-title">Overall Scale</span>
+            <span id="lblOverallScale" class="slider-val">100%</span>
+          </div>
+          <input type="range" id="rngOverallScale" min="0.4" max="4.0" step="0.05" value="1.0" />
+        </div>
+
+        <!-- Horizontal Scale -->
+        <div class="slider-row">
+          <div class="slider-labels">
+            <span class="slider-title">Horizontal Scale (Width)</span>
+            <span id="lblScaleX" class="slider-val">100%</span>
+          </div>
+          <input type="range" id="rngScaleX" min="0.4" max="2.5" step="0.05" value="1.0" />
+        </div>
+
+        <!-- Vertical Scale -->
+        <div class="slider-row">
+          <div class="slider-labels">
+            <span class="slider-title">Vertical Scale (Height)</span>
+            <span id="lblScaleY" class="slider-val">100%</span>
+          </div>
+          <input type="range" id="rngScaleY" min="0.4" max="2.5" step="0.05" value="1.0" />
+        </div>
+      </div>
+
+      <!-- Typography Section -->
+      <div class="pref-section">
+        <span class="section-title">Typography</span>
+        <div class="font-selector">
+          <button type="button" class="font-btn active" data-font="fliqlo">
+            <span class="font-btn-name">Fliqlo Original</span>
+            <span class="font-btn-tag">Original</span>
+          </button>
+          <button type="button" class="font-btn" data-font="barlow-condensed">
+            <span class="font-btn-name">Barlow Condensed</span>
+          </button>
+          <button type="button" class="font-btn" data-font="libre-baskerville">
+            <span class="font-btn-name">Libre Baskerville</span>
+          </button>
+          <button type="button" class="font-btn" data-font="ubuntu">
+            <span class="font-btn-name">Ubuntu</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mechanical Sound Section -->
+      <div class="pref-section">
+        <span class="section-title">Mechanical Audio</span>
+        <div class="pref-row">
+          <div class="label-group">
+            <span class="pref-title">Flip Click Sound</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chkSound" />
+            <span class="slider" />
+          </label>
+        </div>
+
+        <div class="slider-row" id="rowVolume" style="display: none;">
+          <div class="slider-labels">
+            <span class="slider-title">Volume</span>
+            <span id="lblVolume" class="slider-val">50%</span>
+          </div>
+          <input type="range" id="rngVolume" min="0.1" max="1.0" step="0.05" value="0.5" />
+        </div>
+      </div>
+
+      <!-- Atmosphere & Color Themes -->
+      <div class="pref-section">
+        <span class="section-title">Atmosphere</span>
+
+        <div class="pref-row">
+          <div class="label-group">
+            <span class="pref-title">Background Style</span>
+          </div>
+          <div class="color-options" id="bgThemeOptions">
+            <button type="button" class="color-chip active" data-bg="classic" style="background:#0e0e0e; border:1px solid rgba(255,255,255,0.2)" title="Classic Dark"></button>
+            <button type="button" class="color-chip" data-bg="oled" style="background:#000000; border:1px solid rgba(255,255,255,0.2)" title="OLED Pure Black"></button>
+            <button type="button" class="color-chip" data-bg="charcoal" style="background:#17181a; border:1px solid rgba(255,255,255,0.2)" title="Charcoal Slate"></button>
+            <button type="button" class="color-chip" data-bg="navy" style="background:#0a0d14; border:1px solid rgba(255,255,255,0.2)" title="Deep Midnight"></button>
+          </div>
+        </div>
+
+        <div class="pref-row">
+          <div class="label-group">
+            <span class="pref-title">Digit Ink Color</span>
+          </div>
+          <div class="color-options" id="textColorOptions">
+            <button type="button" class="color-chip active" data-color="white" style="background:#f2f2f2" title="Pure White"></button>
+            <button type="button" class="color-chip" data-color="vintage-cream" style="background:#f7eed8" title="Vintage Cream"></button>
+            <button type="button" class="color-chip" data-color="retro-amber" style="background:#ffb347" title="Retro Amber"></button>
+            <button type="button" class="color-chip" data-color="cyan" style="background:#64dfdf" title="Cyber Cyan"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reset All Defaults -->
+      <div class="pref-section" style="border-bottom: none; margin-bottom: 0;">
+        <button type="button" id="btnResetAll" class="btn-reset-all">
+          Restore Fliqlo Default Settings
+        </button>
+      </div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>

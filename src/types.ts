@@ -46,7 +46,9 @@ export interface ClockSettings {
   showSeconds: boolean;
   showAmPm: boolean;
   showDate: boolean;
-  scale: number; // 0.6 to 1.4, default 1.0
+  scale: number; // Overall scale: 0.4 to 4.0, default 1.0
+  scaleX: number; // Horizontal scale: 0.4 to 2.5, default 1.0
+  scaleY: number; // Vertical scale: 0.4 to 2.5, default 1.0
   soundEnabled: boolean;
   soundVolume: number; // 0 to 1
   backgroundTheme: BackgroundTheme;
@@ -61,6 +63,8 @@ export const DEFAULT_SETTINGS: ClockSettings = {
   showAmPm: true,
   showDate: false,
   scale: 1.0,
+  scaleX: 1.0,
+  scaleY: 1.0,
   soundEnabled: false,
   soundVolume: 0.5,
   backgroundTheme: 'classic',

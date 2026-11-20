@@ -1,6 +1,13 @@
 import React, { useEffect } from 'react';
-import { X, Volume2, Sparkles, Type } from 'lucide-react';
-import { ClockSettings, BackgroundTheme, TextColorTheme, FontFamilyId, AVAILABLE_FONTS } from '../types';
+import { X, Volume2, RotateCcw } from 'lucide-react';
+import {
+  ClockSettings,
+  BackgroundTheme,
+  TextColorTheme,
+  FontFamilyId,
+  AVAILABLE_FONTS,
+  DEFAULT_SETTINGS,
+} from '../types';
 import { soundEffects } from './SoundEffects';
 
 interface SettingsModalProps {
@@ -8,6 +15,7 @@ interface SettingsModalProps {
   onClose: () => void;
   settings: ClockSettings;
   onUpdateSettings: (newSettings: Partial<ClockSettings>) => void;
+  onResetDefaults?: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -15,6 +23,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   settings,
   onUpdateSettings,
+  onResetDefaults,
 }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -28,6 +37,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   if (!isOpen) return null;
 
+  const currentScale = settings.scale ?? 1.0;
+  const currentScaleX = settings.scaleX ?? 1.0;
+  const currentScaleY = settings.scaleY ?? 1.0;
+
+  const handleResetScale = () => {
+    onUpdateSettings({
+      scale: 1.0,
+      scaleX: 1.0,
+      scaleY: 1.0,
+    });
+  };
+
+  const handleResetAll = () => {
+    if (onResetDefaults) {
+      onResetDefaults();
+    } else {
+      onUpdateSettings(DEFAULT_SETTINGS);
+    }
+  };
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
@@ -35,29 +64,183 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label="Clock Settings"
+        aria-label="Fliqlo Preferences"
       >
+        {/* Header */}
         <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sparkles size={18} color="#e0e0e0" />
-            <h2 className="modal-title">Fliqlo Settings</h2>
+          <div className="modal-header-left">
+            <div className="fliqlo-logo-badge" title="Fliqlo">
+              <span style={{ fontSize: '9px', fontWeight: 900, color: '#fff', transform: 'translateY(1px)' }}>FL</span>
+            </div>
+            <div className="modal-title-group">
+              <h2 className="modal-title">Fliqlo</h2>
+              <span className="modal-subtitle">Screen Saver Preferences</span>
+            </div>
           </div>
-          <button className="close-btn" onClick={onClose} aria-label="Close settings">
-            <X size={18} />
+          <button className="close-btn" onClick={onClose} aria-label="Close preferences">
+            <X size={15} />
           </button>
         </div>
 
         <div className="settings-section">
-          {/* Font Selection */}
-          <div className="setting-row vertical">
-            <div className="setting-label">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Type size={15} color="#93c5fd" />
-                <span className="setting-title">Clock Font</span>
+          {/* Section 1: Time & Display */}
+          <div className="section-group">
+            <span className="section-heading">Time & Display</span>
+
+            {/* Time Format */}
+            <div className="setting-row">
+              <div className="setting-label">
+                <span className="setting-title">Time Format</span>
+                <span className="setting-desc">12-hour or 24-hour split flaps</span>
               </div>
-              <span className="setting-desc">Choose typography for flip numerals</span>
+              <div className="segmented-control">
+                <button
+                  type="button"
+                  className={`segment-btn ${settings.format === '12h' ? 'active' : ''}`}
+                  onClick={() => onUpdateSettings({ format: '12h' })}
+                >
+                  12-Hour
+                </button>
+                <button
+                  type="button"
+                  className={`segment-btn ${settings.format === '24h' ? 'active' : ''}`}
+                  onClick={() => onUpdateSettings({ format: '24h' })}
+                >
+                  24-Hour
+                </button>
+              </div>
             </div>
 
+            {/* AM/PM indicator */}
+            {settings.format === '12h' && (
+              <div className="setting-row">
+                <div className="setting-label">
+                  <span className="setting-title">AM / PM Indicator</span>
+                  <span className="setting-desc">Corner badge on hour flap</span>
+                </div>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={settings.showAmPm}
+                    onChange={(e) => onUpdateSettings({ showAmPm: e.target.checked })}
+                  />
+                  <span className="slider-switch" />
+                </label>
+              </div>
+            )}
+
+            {/* Show Seconds */}
+            <div className="setting-row">
+              <div className="setting-label">
+                <span className="setting-title">Display Seconds</span>
+                <span className="setting-desc">Add a third flipping seconds card</span>
+              </div>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={settings.showSeconds}
+                  onChange={(e) => onUpdateSettings({ showSeconds: e.target.checked })}
+                />
+                <span className="slider-switch" />
+              </label>
+            </div>
+
+            {/* Show Date */}
+            <div className="setting-row">
+              <div className="setting-label">
+                <span className="setting-title">Display Date</span>
+                <span className="setting-desc">Show calendar date indicator below</span>
+              </div>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={settings.showDate}
+                  onChange={(e) => onUpdateSettings({ showDate: e.target.checked })}
+                />
+                <span className="slider-switch" />
+              </label>
+            </div>
+          </div>
+
+          {/* Section 2: Scale & Geometry */}
+          <div className="section-group">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span className="section-heading">Card Size & Custom Scaling</span>
+              <button
+                type="button"
+                className="btn-subtle"
+                onClick={handleResetScale}
+                title="Reset scale to 100%"
+                style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+              >
+                <RotateCcw size={11} /> Reset Scale
+              </button>
+            </div>
+
+            {/* Overall Scale */}
+            <div className="setting-row">
+              <div className="setting-label">
+                <span className="setting-title">Overall Scale</span>
+                <span className="setting-desc">Resize entire clock (40% – 400%)</span>
+              </div>
+              <div className="range-slider-wrapper">
+                <input
+                  type="range"
+                  className="range-slider"
+                  min="0.4"
+                  max="4.0"
+                  step="0.05"
+                  value={currentScale}
+                  onChange={(e) => onUpdateSettings({ scale: parseFloat(e.target.value) })}
+                />
+                <span className="range-value">{Math.round(currentScale * 100)}%</span>
+              </div>
+            </div>
+
+            {/* Horizontal Scale (Width) */}
+            <div className="setting-row">
+              <div className="setting-label">
+                <span className="setting-title">Horizontal Scale (Width)</span>
+                <span className="setting-desc">Card horizontal aspect ratio (40% – 250%)</span>
+              </div>
+              <div className="range-slider-wrapper">
+                <input
+                  type="range"
+                  className="range-slider"
+                  min="0.4"
+                  max="2.5"
+                  step="0.05"
+                  value={currentScaleX}
+                  onChange={(e) => onUpdateSettings({ scaleX: parseFloat(e.target.value) })}
+                />
+                <span className="range-value">{Math.round(currentScaleX * 100)}%</span>
+              </div>
+            </div>
+
+            {/* Vertical Scale (Height) */}
+            <div className="setting-row">
+              <div className="setting-label">
+                <span className="setting-title">Vertical Scale (Height)</span>
+                <span className="setting-desc">Card vertical aspect ratio (40% – 250%)</span>
+              </div>
+              <div className="range-slider-wrapper">
+                <input
+                  type="range"
+                  className="range-slider"
+                  min="0.4"
+                  max="2.5"
+                  step="0.05"
+                  value={currentScaleY}
+                  onChange={(e) => onUpdateSettings({ scaleY: parseFloat(e.target.value) })}
+                />
+                <span className="range-value">{Math.round(currentScaleY * 100)}%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Typography */}
+          <div className="section-group">
+            <span className="section-heading">Typography</span>
             <div className="font-grid">
               {AVAILABLE_FONTS.map((font) => {
                 const isSelected = settings.fontFamily === font.id;
@@ -84,232 +267,149 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
-          {/* Time Format */}
-          <div className="setting-row">
-            <div className="setting-label">
-              <span className="setting-title">Time Format</span>
-              <span className="setting-desc">Switch between 12-hour or 24-hour display</span>
-            </div>
-            <div className="segmented-control">
-              <button
-                className={`segment-btn ${settings.format === '12h' ? 'active' : ''}`}
-                onClick={() => onUpdateSettings({ format: '12h' })}
-              >
-                12-Hour
-              </button>
-              <button
-                className={`segment-btn ${settings.format === '24h' ? 'active' : ''}`}
-                onClick={() => onUpdateSettings({ format: '24h' })}
-              >
-                24-Hour
-              </button>
-            </div>
-          </div>
+          {/* Section 4: Mechanical Sound */}
+          <div className="section-group">
+            <span className="section-heading">Mechanical Audio</span>
 
-          {/* Show AM/PM indicator (only active for 12h) */}
-          {settings.format === '12h' && (
+            {/* Audio Toggle */}
             <div className="setting-row">
               <div className="setting-label">
-                <span className="setting-title">AM / PM Indicator</span>
-                <span className="setting-desc">Display badge on hour card</span>
+                <span className="setting-title">Split-Flap Click Audio</span>
+                <span className="setting-desc">Solari flip card mechanical sound</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {settings.soundEnabled && (
+                  <button
+                    type="button"
+                    className="btn-subtle"
+                    onClick={() => soundEffects.playFlip(settings.soundVolume)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <Volume2 size={12} /> Test
+                  </button>
+                )}
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={settings.soundEnabled}
+                    onChange={(e) => {
+                      onUpdateSettings({ soundEnabled: e.target.checked });
+                      if (e.target.checked) {
+                        soundEffects.playFlip(settings.soundVolume);
+                      }
+                    }}
+                  />
+                  <span className="slider-switch" />
+                </label>
+              </div>
+            </div>
+
+            {/* Volume slider */}
+            {settings.soundEnabled && (
+              <div className="setting-row">
+                <div className="setting-label">
+                  <span className="setting-title">Click Volume</span>
+                  <span className="setting-desc">Loudness of flap sound</span>
+                </div>
+                <div className="range-slider-wrapper">
+                  <input
+                    type="range"
+                    className="range-slider"
+                    min="0.1"
+                    max="1.0"
+                    step="0.05"
+                    value={settings.soundVolume}
+                    onChange={(e) => onUpdateSettings({ soundVolume: parseFloat(e.target.value) })}
+                  />
+                  <span className="range-value">{Math.round(settings.soundVolume * 100)}%</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Section 5: Atmosphere & Theme */}
+          <div className="section-group">
+            <span className="section-heading">Atmosphere</span>
+
+            {/* Background Style */}
+            <div className="setting-row">
+              <div className="setting-label">
+                <span className="setting-title">Background Style</span>
+                <span className="setting-desc">Classic dark screensaver backdrop</span>
+              </div>
+              <div className="color-options">
+                {(
+                  [
+                    { id: 'classic', color: '#0e0e0e', title: 'Classic Dark' },
+                    { id: 'oled', color: '#000000', title: 'OLED Pure Black' },
+                    { id: 'charcoal', color: '#17181a', title: 'Charcoal Slate' },
+                    { id: 'navy', color: '#0a0d14', title: 'Deep Midnight' },
+                  ] as const
+                ).map((th) => (
+                  <button
+                    key={th.id}
+                    className={`color-chip ${settings.backgroundTheme === th.id ? 'active' : ''}`}
+                    style={{ backgroundColor: th.color, border: '1px solid rgba(255,255,255,0.2)' }}
+                    onClick={() => onUpdateSettings({ backgroundTheme: th.id as BackgroundTheme })}
+                    title={th.title}
+                    aria-label={th.title}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Digit Color */}
+            <div className="setting-row">
+              <div className="setting-label">
+                <span className="setting-title">Digit Color</span>
+                <span className="setting-desc">Flap numeral ink color</span>
+              </div>
+              <div className="color-options">
+                {(
+                  [
+                    { id: 'white', color: '#f2f2f2', title: 'Pure White' },
+                    { id: 'vintage-cream', color: '#f7eed8', title: 'Vintage Cream' },
+                    { id: 'retro-amber', color: '#ffb347', title: 'Retro Amber' },
+                    { id: 'cyan', color: '#64dfdf', title: 'Cyber Cyan' },
+                  ] as const
+                ).map((tc) => (
+                  <button
+                    key={tc.id}
+                    className={`color-chip ${settings.textColorTheme === tc.id ? 'active' : ''}`}
+                    style={{ backgroundColor: tc.color }}
+                    onClick={() => onUpdateSettings({ textColorTheme: tc.id as TextColorTheme })}
+                    title={tc.title}
+                    aria-label={tc.title}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Auto Hide Controls */}
+            <div className="setting-row">
+              <div className="setting-label">
+                <span className="setting-title">Auto-Hide Controls</span>
+                <span className="setting-desc">Hide cursor and buttons when idle</span>
               </div>
               <label className="switch">
                 <input
                   type="checkbox"
-                  checked={settings.showAmPm}
-                  onChange={(e) => onUpdateSettings({ showAmPm: e.target.checked })}
-                />
-                <span className="slider-switch" />
-              </label>
-            </div>
-          )}
-
-          {/* Show Seconds */}
-          <div className="setting-row">
-            <div className="setting-label">
-              <span className="setting-title">Display Seconds</span>
-              <span className="setting-desc">Add a flipping seconds flap</span>
-            </div>
-            <label className="switch">
-              <input
-                type="checkbox"
-                checked={settings.showSeconds}
-                onChange={(e) => onUpdateSettings({ showSeconds: e.target.checked })}
-              />
-              <span className="slider-switch" />
-            </label>
-          </div>
-
-          {/* Show Date */}
-          <div className="setting-row">
-            <div className="setting-label">
-              <span className="setting-title">Display Date</span>
-              <span className="setting-desc">Show current date under clock</span>
-            </div>
-            <label className="switch">
-              <input
-                type="checkbox"
-                checked={settings.showDate}
-                onChange={(e) => onUpdateSettings({ showDate: e.target.checked })}
-              />
-              <span className="slider-switch" />
-            </label>
-          </div>
-
-          {/* Scale Slider */}
-          <div className="setting-row">
-            <div className="setting-label">
-              <span className="setting-title">Clock Scale</span>
-              <span className="setting-desc">Adjust size on screen</span>
-            </div>
-            <div className="range-slider-wrapper">
-              <input
-                type="range"
-                className="range-slider"
-                min="0.6"
-                max="1.4"
-                step="0.05"
-                value={settings.scale}
-                onChange={(e) => onUpdateSettings({ scale: parseFloat(e.target.value) })}
-              />
-              <span className="range-value">{Math.round(settings.scale * 100)}%</span>
-            </div>
-          </div>
-
-          {/* Mechanical Sound Effect */}
-          <div className="setting-row">
-            <div className="setting-label">
-              <span className="setting-title">Mechanical Flip Sound</span>
-              <span className="setting-desc">Retro split-flap click audio</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {settings.soundEnabled && (
-                <button
-                  type="button"
-                  style={{
-                    background: 'rgba(255,255,255,0.08)',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    borderRadius: '6px',
-                    color: '#ddd',
-                    padding: '4px 8px',
-                    fontSize: '11px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                  }}
-                  onClick={() => soundEffects.playFlip(settings.soundVolume)}
-                >
-                  <Volume2 size={12} /> Test
-                </button>
-              )}
-              <label className="switch">
-                <input
-                  type="checkbox"
-                  checked={settings.soundEnabled}
-                  onChange={(e) => {
-                    onUpdateSettings({ soundEnabled: e.target.checked });
-                    if (e.target.checked) {
-                      soundEffects.playFlip(settings.soundVolume);
-                    }
-                  }}
+                  checked={settings.autoHideControls}
+                  onChange={(e) => onUpdateSettings({ autoHideControls: e.target.checked })}
                 />
                 <span className="slider-switch" />
               </label>
             </div>
           </div>
 
-          {/* Sound Volume (if enabled) */}
-          {settings.soundEnabled && (
-            <div className="setting-row">
-              <div className="setting-label">
-                <span className="setting-title">Sound Volume</span>
-                <span className="setting-desc">Flip sound loudness</span>
-              </div>
-              <div className="range-slider-wrapper">
-                <input
-                  type="range"
-                  className="range-slider"
-                  min="0.1"
-                  max="1.0"
-                  step="0.05"
-                  value={settings.soundVolume}
-                  onChange={(e) => onUpdateSettings({ soundVolume: parseFloat(e.target.value) })}
-                />
-                <span className="range-value">{Math.round(settings.soundVolume * 100)}%</span>
-              </div>
-            </div>
-          )}
-
-          {/* Background Theme */}
-          <div className="setting-row">
-            <div className="setting-label">
-              <span className="setting-title">Background Style</span>
-              <span className="setting-desc">Select backdrop atmosphere</span>
-            </div>
-            <div className="color-options">
-              {(
-                [
-                  { id: 'classic', color: '#0e0e0e', title: 'Classic Dark' },
-                  { id: 'oled', color: '#000000', title: 'OLED Pure Black' },
-                  { id: 'charcoal', color: '#17181a', title: 'Charcoal Slate' },
-                  { id: 'navy', color: '#0a0d14', title: 'Deep Midnight' },
-                ] as const
-              ).map((th) => (
-                <button
-                  key={th.id}
-                  className={`color-chip ${settings.backgroundTheme === th.id ? 'active' : ''}`}
-                  style={{ backgroundColor: th.color, border: '1px solid rgba(255,255,255,0.2)' }}
-                  onClick={() => onUpdateSettings({ backgroundTheme: th.id as BackgroundTheme })}
-                  title={th.title}
-                  aria-label={th.title}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Text Color Theme */}
-          <div className="setting-row">
-            <div className="setting-label">
-              <span className="setting-title">Digit Color</span>
-              <span className="setting-desc">Font color style</span>
-            </div>
-            <div className="color-options">
-              {(
-                [
-                  { id: 'white', color: '#f2f2f2', title: 'Pure White' },
-                  { id: 'vintage-cream', color: '#f7eed8', title: 'Vintage Cream' },
-                  { id: 'retro-amber', color: '#ffb347', title: 'Retro Amber' },
-                  { id: 'cyan', color: '#64dfdf', title: 'Cyber Cyan' },
-                ] as const
-              ).map((tc) => (
-                <button
-                  key={tc.id}
-                  className={`color-chip ${settings.textColorTheme === tc.id ? 'active' : ''}`}
-                  style={{ backgroundColor: tc.color }}
-                  onClick={() => onUpdateSettings({ textColorTheme: tc.id as TextColorTheme })}
-                  title={tc.title}
-                  aria-label={tc.title}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Auto Hide Controls */}
-          <div className="setting-row">
-            <div className="setting-label">
-              <span className="setting-title">Auto-Hide Controls</span>
-              <span className="setting-desc">Hide cursor and buttons when idle</span>
-            </div>
-            <label className="switch">
-              <input
-                type="checkbox"
-                checked={settings.autoHideControls}
-                onChange={(e) => onUpdateSettings({ autoHideControls: e.target.checked })}
-              />
-              <span className="slider-switch" />
-            </label>
-          </div>
+          {/* Reset All */}
+          <button
+            type="button"
+            className="btn-reset-all"
+            onClick={handleResetAll}
+          >
+            Restore Fliqlo Default Settings
+          </button>
         </div>
       </div>
     </div>

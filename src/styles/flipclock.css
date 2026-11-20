@@ -87,25 +87,33 @@
   box-sizing: border-box;
 }
 
-/* Font classes */
+/* Font classes & Optical Baseline Alignments */
 .font-fliqlo {
   --clock-font: 'Fliqlo', -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
   --clock-font-weight: 800;
+  --font-y-offset: 0.133em;
+  --font-x-offset: 0em;
 }
 
 .font-barlow-condensed {
   --clock-font: 'Barlow Condensed', sans-serif;
   --clock-font-weight: 800;
+  --font-y-offset: -0.040em;
+  --font-x-offset: 0em;
 }
 
 .font-libre-baskerville {
   --clock-font: 'Libre Baskerville', Georgia, serif;
   --clock-font-weight: 700;
+  --font-y-offset: 0.045em;
+  --font-x-offset: 0em;
 }
 
 .font-ubuntu {
   --clock-font: 'Ubuntu', sans-serif;
   --clock-font-weight: 700;
+  --font-y-offset: -0.016em;
+  --font-x-offset: 0em;
 }
 
 /* Background themes */
@@ -192,8 +200,8 @@
 /* Single Flip Card Unit */
 .flip-unit {
   position: relative;
-  width: clamp(140px, 26vw, 360px);
-  height: clamp(150px, 28vw, 380px);
+  width: clamp(160px, 30vw, 560px);
+  height: clamp(170px, 32vw, 600px);
   border-radius: var(--card-radius);
   box-shadow: var(--card-shadow);
   perspective: 1200px;
@@ -202,8 +210,8 @@
 
 /* Small unit for seconds */
 .flip-unit.seconds-unit {
-  width: clamp(90px, 16vw, 220px);
-  height: clamp(150px, 28vw, 380px);
+  width: clamp(105px, 18vw, 340px);
+  height: clamp(170px, 32vw, 600px);
 }
 
 /* Upper and Lower Card Halves */
@@ -254,18 +262,20 @@
   align-items: center;
   justify-content: center;
   font-family: var(--clock-font);
-  font-size: clamp(90px, 17vw, 240px);
+  font-size: clamp(100px, 20vw, 360px);
   font-weight: var(--clock-font-weight);
   color: var(--text-color);
   letter-spacing: -0.03em;
   line-height: 1;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums lining-nums;
+  transform: translateY(var(--font-y-offset, 0)) translateX(var(--font-x-offset, 0));
 }
 
 /* Seconds card number size */
 .seconds-unit .card-number {
-  font-size: clamp(65px, 11vw, 160px);
+  font-size: clamp(70px, 13vw, 240px);
 }
 
 /* Positioning number in top and bottom flaps */
@@ -549,40 +559,40 @@
 }
 
 /* ==========================================================================
-   Settings Modal
+   Settings Modal - Authentic Fliqlo Aesthetic
    ========================================================================== */
 
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 200;
   padding: 20px;
-  animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: modalFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .settings-modal {
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;
   max-height: 88vh;
   overflow-y: auto;
-  background: #1c1c1e;
+  background: #18181a;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 22px;
-  box-shadow: 0 32px 64px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  box-shadow: 0 32px 64px -12px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.05);
   color: #f2f2f2;
-  padding: 24px;
-  animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  padding: 24px 26px;
+  animation: modalSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Scrollbar styling for modal */
 .settings-modal::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 
 .settings-modal::-webkit-scrollbar-track {
@@ -590,7 +600,7 @@
 }
 
 .settings-modal::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.16);
   border-radius: 3px;
 }
 
@@ -598,7 +608,6 @@
   from {
     opacity: 0;
   }
-
   to {
     opacity: 1;
   }
@@ -607,9 +616,8 @@
 @keyframes modalSlideUp {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.96);
+    transform: translateY(16px) scale(0.97);
   }
-
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -620,24 +628,69 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
+  margin-bottom: 22px;
+  padding-bottom: 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.modal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fliqlo-logo-badge {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 26px;
+  height: 26px;
+  background: #242426;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.fliqlo-logo-badge::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #000000;
+}
+
+.modal-title-group {
+  display: flex;
+  flex-direction: column;
+}
+
 .modal-title {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 800;
   margin: 0;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.modal-subtitle {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 500;
 }
 
 .close-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: #a0a0a0;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -647,14 +700,37 @@
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.15);
   color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .settings-section {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 22px;
+}
+
+.section-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.section-group:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.section-heading {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
 }
 
 .setting-row {
@@ -672,18 +748,19 @@
 .setting-label {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
 .setting-title {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
-  color: #eeeeee;
+  color: #f0f0f0;
+  letter-spacing: -0.01em;
 }
 
 .setting-desc {
-  font-size: 12px;
-  color: #888888;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.45);
 }
 
 /* ==========================================================================
@@ -702,51 +779,51 @@
   flex-direction: column;
   align-items: flex-start;
   padding: 12px 14px;
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: all 0.16s ease;
   text-align: left;
   outline: none;
   position: relative;
 }
 
 .font-card:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
 }
 
 .font-card.active {
-  background: rgba(255, 255, 255, 0.09);
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 1px #3b82f6, 0 4px 12px rgba(59, 130, 246, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #ffffff;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 4px 14px rgba(0, 0, 0, 0.4);
 }
 
 .font-preview {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   color: #ffffff;
-  line-height: 1.2;
+  line-height: 1.15;
   margin-bottom: 6px;
   letter-spacing: -0.02em;
 }
 
 .font-name {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
-  color: #eeeeee;
+  color: #e5e5e5;
   margin-bottom: 2px;
 }
 
 .font-card.active .font-name {
-  color: #60a5fa;
+  color: #ffffff;
 }
 
 .font-desc {
-  font-size: 10.5px;
-  color: #777777;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
   line-height: 1.25;
 }
 
@@ -754,12 +831,13 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(59, 130, 246, 0.2);
-  color: #93c5fd;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
   font-size: 9px;
   font-weight: 700;
-  padding: 2px 5px;
+  padding: 2px 6px;
   border-radius: 4px;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -767,34 +845,38 @@
    Controls: Segmented, Switches, Sliders
    ========================================================================== */
 
-/* Custom segmented control for 12h / 24h */
+/* Segmented control for 12h / 24h */
 .segmented-control {
   display: flex;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.4);
   border-radius: 8px;
   padding: 3px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .segment-btn {
   background: transparent;
   border: none;
-  color: #888888;
+  color: rgba(255, 255, 255, 0.55);
   padding: 6px 14px;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.segment-btn.active {
-  background: #333336;
+.segment-btn:hover {
   color: #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
-/* Toggle Switch */
+.segment-btn.active {
+  background: #2f2f33;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+/* Fliqlo Toggle Switch */
 .switch {
   position: relative;
   display: inline-block;
@@ -812,30 +894,33 @@
   position: absolute;
   cursor: pointer;
   inset: 0;
-  background-color: #38383a;
-  transition: 0.25s;
+  background-color: #303033;
+  transition: 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
   border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .slider-switch:before {
   position: absolute;
   content: "";
-  height: 18px;
-  width: 18px;
+  height: 16px;
+  width: 16px;
   left: 3px;
   bottom: 3px;
-  background-color: white;
-  transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: #999999;
+  transition: 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
   border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
-input:checked+.slider-switch {
-  background-color: #34c759;
+input:checked + .slider-switch {
+  background-color: #ffffff;
+  border-color: #ffffff;
 }
 
-input:checked+.slider-switch:before {
+input:checked + .slider-switch:before {
   transform: translateX(20px);
+  background-color: #161618;
 }
 
 /* Range input slider */
@@ -843,36 +928,82 @@ input:checked+.slider-switch:before {
   display: flex;
   align-items: center;
   gap: 12px;
-  width: 160px;
+  width: 180px;
 }
 
 .range-slider {
   flex: 1;
   -webkit-appearance: none;
   appearance: none;
-  height: 5px;
-  background: #38383a;
-  border-radius: 3px;
+  height: 4px;
+  background: #333336;
+  border-radius: 2px;
   outline: none;
 }
 
 .range-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: #ffffff;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: transform 0.1s ease;
+}
+
+.range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
 }
 
 .range-value {
-  font-size: 12px;
-  color: #999;
-  width: 38px;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.65);
+  width: 44px;
   text-align: right;
   font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+/* Subtle Action / Reset Buttons */
+.btn-subtle {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-subtle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.btn-reset-all {
+  width: 100%;
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  letter-spacing: 0.02em;
+}
+
+.btn-reset-all:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
 }
 
 /* Theme picker chips */
@@ -882,18 +1013,18 @@ input:checked+.slider-switch:before {
 }
 
 .color-chip {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   cursor: pointer;
   border: 2px solid transparent;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   padding: 0;
 }
 
 .color-chip.active {
   border-color: #ffffff;
-  transform: scale(1.15);
+  transform: scale(1.18);
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
 }
 
