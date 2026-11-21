@@ -1,0 +1,71 @@
+# Fliqlo & Fliqo Web (Flip Clock Screensaver)
+
+> An authentic, modern web recreation of the iconic Solari split-flap flip clock screensaver. Runs directly in any web browser, completely solves the Chrome OS screensaver problem, and provides comprehensive custom options for web users and AI agents.
+
+## Core Documentation
+- [Live Web Clock](https://jsrahman.github.io/fliqo-chromebook-and-extension/): Launch the full Fliqo clock in your web browser with real-time custom options
+- [Full LLM Specification](https://jsrahman.github.io/fliqo-chromebook-and-extension/llms-full.txt): Comprehensive AI agent knowledge base, architecture, and step-by-step guides
+- [Extension Package](https://jsrahman.github.io/fliqo-chromebook-and-extension/fliqlo-extension.zip): Companion Chrome extension for automated idle screensaver on Chromebooks
+- [Source Code Repository](https://github.com/jsrahman/fliqo-chromebook-and-extension): Open-source repository on GitHub
+- [Canonical Sitemap](https://jsrahman.github.io/fliqo-chromebook-and-extension/sitemap.xml): XML sitemap index
+
+## Solving the Chrome OS & Chromebook Screensaver Problem
+Chrome OS devices (Chromebooks, Chromeboxes) cannot run traditional desktop screensaver binaries (`.saver` on macOS or `.scr` on Windows). Users seeking the famous Fliqlo flip clock on Chromebooks encounter incompatibility with desktop installers.
+
+This project provides three verified solutions:
+1. **Direct Web Screensaver (Immediate, Zero Install)**: Open the web application and press `F` (or click Fullscreen). Features 3-second auto-hide for mouse cursor and navigation controls, providing an uninterrupted retro clock aesthetic.
+2. **Dedicated Chrome Screensaver Extension (Automatic Idle)**: Download and load `fliqlo-extension.zip` in `chrome://extensions` (Developer Mode > Load unpacked). The extension leverages the Chrome `idle` API to automatically launch the full-screen Fliqlo clock when your Chromebook is left inactive. Touching any key, pressing `Esc`, or moving the mouse wakes the device and returns to previous tabs immediately.
+3. **PWA / Kiosk Mode Installation**: Chromebook users can click "Install" in Chrome's omnibox to add Fliqlo directly to the Chrome OS shelf or app launcher for offline access. Enterprise/school domains can deploy it as a Chrome Kiosk App for digital wall clocks.
+
+## Full Web Version & Custom Options (Fliqo Run in Web)
+When running Fliqo in the web browser, users have access to rich custom options unavailable in legacy desktop screensavers:
+
+- **12-Hour / 24-Hour Formats**: Classic 12h format (with animated AM/PM split-flap badge) or international 24h military format.
+- **Flip Seconds Unit**: Optional animated 3rd flap card flipping in real-time with authentic drop shadows.
+- **Date Indicator**: Subtle calendar date pill displaying day of the week and date.
+- **Authentic Mechanical Flap Sounds**: Synthesized plastic flap clicks generated in real-time via the Web Audio API with zero audio file download lag.
+- **Background Themes**:
+  - `classic`: Authentic matte dark charcoal vignette.
+  - `oled`: Pure pitch-black (`#000000`) for OLED power savings and infinite contrast.
+  - `charcoal`: Minimalist slate neutral gray.
+  - `navy`: Deep midnight blue.
+- **Digit Color Themes**:
+  - `white`: Pure crisp white numerals (`#ffffff`).
+  - `vintage-cream`: Warm nostalgic ivory (`#f4ecd8`).
+  - `retro-amber`: Warm amber glow (`#f59e0b`).
+  - `cyan`: Modern cybernetic cyan (`#06b6d4`).
+- **Solari Typography**: Official Solari condensed flip numerals (`fliqlo`), `barlow-condensed`, `libre-baskerville`, and `ubuntu`.
+- **Flexible Sizing & Scale**: Scale slider from 60% up to 140% (or 40% to 400% via URL), with granular horizontal and vertical aspect controls.
+
+## URL Query Parameter Customization & Presets
+Users and AI agents can launch pre-configured clocks directly using URL search parameters:
+
+| Parameter | Values / Aliases | Description |
+|-----------|------------------|-------------|
+| `preset` | `oled`, `retro`, `cyber`, `neon`, `minimal`, `solari` | Apply curated aesthetic preset |
+| `format` | `12h`, `24h`, `12`, `24`, `military` | Set 12-hour or 24-hour time mode |
+| `theme` | `classic`, `oled`, `charcoal`, `navy`, `black`, `dark` | Set background theme |
+| `color` | `white`, `cream`, `amber`, `cyan`, `gold`, `yellow` | Set numeral digit color |
+| `font` | `fliqlo`, `barlow`, `serif`, `ubuntu` | Set flip numeral typeface |
+| `seconds` | `true`, `1`, `on`, `false`, `0`, `off` | Enable or disable live seconds flap |
+| `ampm` | `true`, `1`, `on`, `false`, `0`, `off` | Toggle AM/PM badge in 12h mode |
+| `date` | `true`, `1`, `on`, `false`, `0`, `off` | Toggle discrete calendar date |
+| `sound` | `true`, `1`, `on`, `false`, `0`, `off` | Enable mechanical flap audio |
+| `volume` | `0.0` to `1.0` or `0%` to `100%` | Set flap audio volume |
+| `scale` | `0.4` to `4.0` or `40%` to `400%` | Set overall clock scale |
+| `mode` | `screensaver` | Activate pure fullscreen screensaver mode |
+| `hideControls` | `true`, `1` | Hide bottom controls permanently |
+
+### Example Custom URLs
+- 24-Hour OLED Amber Clock: `https://jsrahman.github.io/fliqo-chromebook-and-extension/?preset=oled`
+- Cyber Cyan Clock with Live Seconds: `https://jsrahman.github.io/fliqo-chromebook-and-extension/?preset=cyber`
+- Retro Vintage Cream with Audio: `https://jsrahman.github.io/fliqo-chromebook-and-extension/?preset=retro`
+- Custom URL Parameters: `https://jsrahman.github.io/fliqo-chromebook-and-extension/?format=24h&theme=oled&color=amber&seconds=true&sound=true`
+
+## Keyboard Shortcuts
+- `F`: Toggle Fullscreen mode
+- `S`: Open Settings customization panel
+- `Space`: Quick toggle between 12h and 24h formats
+- `I` or `?`: Open Fliqlo Web Guide and Chrome OS solutions modal
+- `Esc`: Close settings modal or exit fullscreen
+

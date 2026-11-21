@@ -6,8 +6,6 @@ export type TextColorTheme = 'white' | 'vintage-cream' | 'retro-amber' | 'cyan';
 
 export type FontFamilyId =
   | 'fliqlo'
-  | 'flip-white'
-  | 'fliqlo-mac'
   | 'barlow-condensed'
   | 'libre-baskerville'
   | 'ubuntu';
@@ -23,24 +21,10 @@ export interface FontOption {
 export const AVAILABLE_FONTS: FontOption[] = [
   {
     id: 'fliqlo',
-    name: 'Fliqlo (FLIP Clock)',
-    fontFamily: '"FLIPclock", "Fliqlo", sans-serif',
-    description: 'Authentic solid flip clock retro numerals',
-    badge: 'Fliqlo',
-  },
-  {
-    id: 'flip-white',
-    name: 'FLIP Clock White',
-    fontFamily: '"FLIPclock-White", "FLIPclock", sans-serif',
-    description: 'Hollow retro outline split-flap numerals',
-    badge: 'Outline',
-  },
-  {
-    id: 'fliqlo-mac',
-    name: 'Fliqlo Mac OS',
-    fontFamily: '"Fliqlo-Mac", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif',
-    description: 'Classic screensaver font by Yuji Adachi',
-    badge: 'Mac OS',
+    name: 'Fliqlo',
+    fontFamily: '"Fliqlo", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif',
+    description: 'Iconic screensaver flip clock font by Yuji Adachi',
+    badge: 'Official',
   },
   {
     id: 'barlow-condensed',

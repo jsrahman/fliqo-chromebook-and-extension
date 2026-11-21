@@ -1,0 +1,33 @@
+{
+  "name": "Fliqlo Web – Flip Clock Screensaver",
+  "short_name": "Fliqlo",
+  "description": "Authentic Solari flip clock screensaver for Chrome OS, Chromebook, Windows, Mac and Linux with full custom options.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone", "window-controls-overlay"],
+  "orientation": "landscape",
+  "background_color": "#0e0e0e",
+  "theme_color": "#0e0e0e",
+  "categories": ["utilities", "productivity", "lifestyle"],
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

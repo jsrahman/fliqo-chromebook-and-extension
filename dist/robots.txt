@@ -1,0 +1,68 @@
+# Robots.txt for Fliqlo Web (Flip Clock Screensaver for Chrome OS, Mac, Windows)
+# Welcome to all web crawlers, search engines, and AI agents.
+
+User-agent: *
+Allow: /
+Crawl-delay: 0
+
+# Explicit AI Agent & Large Language Model Web Retrieval Permissions
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Cohere-ai
+Allow: /
+
+User-agent: Diffbot
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+# Canonical Sitemaps (RFC 9309 requires fully-qualified absolute URL)
+Sitemap: https://jsrahman.github.io/fliqo-chromebook-and-extension/sitemap.xml
+
+# Standard AI Agents Information Specification (llmstxt.org)
+# https://jsrahman.github.io/fliqo-chromebook-and-extension/llms.txt
+# https://jsrahman.github.io/fliqo-chromebook-and-extension/llms-full.txt

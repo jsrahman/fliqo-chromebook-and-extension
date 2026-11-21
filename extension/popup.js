@@ -82,6 +82,12 @@ const btnResetAll = document.getElementById('btnResetAll');
 chrome.storage.sync.get([CLOCK_STORAGE_KEY, EXT_CONFIG_KEY], (res) => {
   if (res[CLOCK_STORAGE_KEY]) {
     currentClockSettings = { ...DEFAULT_CLOCK_SETTINGS, ...res[CLOCK_STORAGE_KEY] };
+    if (
+      currentClockSettings.fontFamily === 'flip-white' ||
+      currentClockSettings.fontFamily === 'fliqlo-mac'
+    ) {
+      currentClockSettings.fontFamily = 'fliqlo';
+    }
   }
   if (res[EXT_CONFIG_KEY]) {
     currentExtConfig = { ...DEFAULT_EXT_CONFIG, ...res[EXT_CONFIG_KEY] };

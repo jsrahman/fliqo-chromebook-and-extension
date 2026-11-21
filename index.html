@@ -2,15 +2,304 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
+    <!-- Primary SEO Meta Tags -->
+    <title>Fliqlo (Fliqo) Run in Web – Flip Clock &amp; Chrome OS Screensaver</title>
+    <meta name="title" content="Fliqlo (Fliqo) Run in Web – Flip Clock &amp; Chrome OS Screensaver" />
+    <meta name="description" content="Run the full Fliqlo &amp; Fliqo flip clock in your web browser. Solves the Chrome OS screensaver problem with rich custom options: 12h/24h format, live flip seconds, OLED pure black &amp; amber themes, flap sounds, presets, and Chrome extension." />
+    <meta name="keywords" content="fliqo run in web, fliqlo run in web, fliqo, fliqlo, chrome os screen saver problem, chromebook screensaver, fliqo screensaver, fliqlo screensaver, fliqo web, fliqlo web, flip clock online, online flip clock, retro flip clock, solari clock, 24 hour fliqlo web, fliqo custom options, fliqlo custom options, fliqlo chrome extension, chromebook flip clock" />
+    <meta name="author" content="Fliqlo Web Community" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <link rel="canonical" href="https://jsrahman.github.io/fliqo-chromebook-and-extension/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://jsrahman.github.io/fliqo-chromebook-and-extension/" />
+    <meta property="og:title" content="Fliqlo (Fliqo) Run in Web – Flip Clock &amp; Chrome OS Screensaver" />
+    <meta property="og:description" content="Run the full Fliqlo (Fliqo) flip clock in your web browser. Solves the Chrome OS screensaver problem with full custom options: 12h/24h, flip seconds, OLED themes, amber digits, flap sound FX, presets, and Chrome extension." />
+    <meta property="og:image" content="https://jsrahman.github.io/fliqo-chromebook-and-extension/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Fliqlo Web Flip Clock Screensaver" />
+    <meta property="og:site_name" content="Fliqlo Web" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://jsrahman.github.io/fliqo-chromebook-and-extension/" />
+    <meta name="twitter:title" content="Fliqlo (Fliqo) Run in Web – Flip Clock &amp; Chrome OS Screensaver" />
+    <meta name="twitter:description" content="Authentic Solari flip clock in your browser. Solves Chrome OS screensaver problem with full custom options: 12h/24h, seconds, OLED themes, amber digits, and sound FX." />
+    <meta name="twitter:image" content="https://jsrahman.github.io/fliqo-chromebook-and-extension/og-image.png" />
+    <meta name="twitter:image:alt" content="Fliqlo Web Flip Clock Screensaver" />
+
+    <!-- PWA & Mobile Optimization -->
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <meta name="theme-color" content="#0e0e0e" />
+    <meta name="color-scheme" content="dark" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="theme-color" content="#0e0e0e" />
-    <title>Fliqlo Flip Clock</title>
+    <meta name="apple-mobile-web-app-title" content="Fliqlo" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png" />
+
+    <!-- Machine-Readable AI Agent Documentation -->
+    <link rel="help" href="./llms.txt" type="text/plain" title="LLM Knowledge Base" />
+    <link rel="alternate" href="./llms-full.txt" type="text/plain" title="Full LLM Specification" />
+
+    <!-- Preload Primary Font for Instant Render -->
+    <link rel="preload" href="./fonts/FliqloBold.otf" as="font" type="font/otf" crossorigin />
+
+    <!-- Schema.org JSON-LD Structured Data for Google, Bing, and AI Search Crawlers -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://jsrahman.github.io/fliqo-chromebook-and-extension/#website",
+          "url": "https://jsrahman.github.io/fliqo-chromebook-and-extension/",
+          "name": "Fliqlo (Fliqo) Run in Web – Flip Clock & Chrome OS Screensaver",
+          "alternateName": [
+            "Fliqo Run in Web",
+            "Fliqlo Run in Web",
+            "Fliqo Web",
+            "Fliqlo Web",
+            "Chrome OS Screensaver Flip Clock",
+            "Chromebook Flip Clock Screensaver",
+            "Fliqlo Flip Clock"
+          ],
+          "description": "Authentic Solari split-flap flip clock solving the Chrome OS screensaver problem with a full web edition featuring rich custom options.",
+          "inLanguage": "en-US"
+        },
+        {
+          "@type": "WebApplication",
+          "@id": "https://jsrahman.github.io/fliqo-chromebook-and-extension/#app",
+          "name": "Fliqlo Web Flip Clock Screensaver",
+          "alternateName": [
+            "Fliqo Run in Web",
+            "Fliqo Web Screensaver",
+            "Fliqlo Chromebook Screensaver",
+            "Fliqlo Flip Clock Web Edition"
+          ],
+          "applicationCategory": "UtilitiesApplication",
+          "operatingSystem": "Chrome OS, ChromeOS, Chromebook, macOS, Windows, Linux, Android, iOS",
+          "browserRequirements": "Requires HTML5 Canvas and CSS 3D Transforms support. Compatible with Chrome, Edge, Firefox, Safari, Brave, and Opera.",
+          "softwareVersion": "1.0.0",
+          "image": "https://jsrahman.github.io/fliqo-chromebook-and-extension/og-image.png",
+          "screenshot": "https://jsrahman.github.io/fliqo-chromebook-and-extension/og-image.png",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "featureList": [
+            "Solves the Chrome OS and Chromebook screensaver problem natively",
+            "Full Fliqo web edition running directly in modern web browsers",
+            "Authentic 3D mechanical split-flap animation with realistic shadows",
+            "Configurable 12-hour (with AM/PM badge) and 24-hour military time format",
+            "Optional animated seconds card unit flipping in real-time",
+            "Synthesized plastic flap click sound effects via Web Audio API",
+            "Four background themes: Classic Dark, OLED Pure Black (#000000), Charcoal Slate, Midnight Navy",
+            "Four numeral colors: Pure White, Vintage Cream (#f4ecd8), Retro Amber (#f59e0b), Cyber Cyan (#06b6d4)",
+            "Four Solari font choices: Fliqlo Official, Barlow Condensed, Libre Baskerville, Ubuntu",
+            "Instant aesthetic presets: oled, retro, cyber, neon, minimal, solari",
+            "Granular scale controls from 60% to 140% (or 40% to 400% via URL)",
+            "Deep-linking URL parameter controls for bookmarking and sharing (e.g. ?preset=oled or ?format=24h&theme=oled&color=amber)",
+            "Keyboard shortcuts: F (Fullscreen), S (Settings), Space (12/24h toggle), I/Help (Guide), Esc",
+            "Auto-hide controls and cursor after 3 seconds of inactivity",
+            "Downloadable Chrome Extension screensaver with automatic idle detection",
+            "Installable as Progressive Web App (PWA) on Chromebook shelf",
+            "100% Free, privacy-respecting, zero ads, zero tracking, and offline capable"
+          ]
+        },
+        {
+          "@type": "HowTo",
+          "@id": "https://jsrahman.github.io/fliqo-chromebook-and-extension/#howto-chromebook",
+          "name": "How to Solve the Chrome OS Screensaver Problem on Chromebooks",
+          "description": "Step-by-step instructions to run the iconic Fliqo / Fliqlo split-flap screensaver on Chromebook and Chrome OS devices, overcoming the lack of desktop binary support.",
+          "totalTime": "PT2M",
+          "step": [
+            {
+              "@type": "HowToStep",
+              "position": 1,
+              "name": "Open Fliqo in Web",
+              "text": "Navigate to https://jsrahman.github.io/fliqo-chromebook-and-extension/ on your Chromebook in Google Chrome.",
+              "url": "https://jsrahman.github.io/fliqo-chromebook-and-extension/#step-open-web"
+            },
+            {
+              "@type": "HowToStep",
+              "position": 2,
+              "name": "Enter Fullscreen Mode",
+              "text": "Press the 'F' key or click 'Fullscreen' on the bottom toolbar. Controls and cursor automatically fade out after 3 seconds of inactivity.",
+              "url": "https://jsrahman.github.io/fliqo-chromebook-and-extension/#step-fullscreen"
+            },
+            {
+              "@type": "HowToStep",
+              "position": 3,
+              "name": "Customize Display Options & Presets",
+              "text": "Press 'S' or click 'Settings' to customize 12h/24h format, display seconds, choose OLED Pure Black or Retro Amber themes, enable mechanical flap sounds, or use presets like ?preset=oled.",
+              "url": "https://jsrahman.github.io/fliqo-chromebook-and-extension/#step-custom-options"
+            },
+            {
+              "@type": "HowToStep",
+              "position": 4,
+              "name": "Install Chrome Screensaver Extension (Optional for Automatic Idle)",
+              "text": "Click 'Extension' on the bottom bar to download fliqlo-extension.zip. Unpack the ZIP, go to chrome://extensions, turn on Developer Mode, and click 'Load unpacked' to enable automatic idle screensaver launch.",
+              "url": "https://jsrahman.github.io/fliqo-chromebook-and-extension/#step-extension"
+            },
+            {
+              "@type": "HowToStep",
+              "position": 5,
+              "name": "Install as PWA App on Chromebook Shelf (Optional)",
+              "text": "Click the Install icon in the Chrome omnibox to add Fliqlo directly to your Chromebook shelf and app drawer for instant offline access.",
+              "url": "https://jsrahman.github.io/fliqo-chromebook-and-extension/#step-pwa"
+            }
+          ]
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://jsrahman.github.io/fliqo-chromebook-and-extension/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "How does Fliqlo Web solve the Chrome OS screensaver problem?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Chrome OS cannot run legacy macOS (.saver) or Windows (.scr) screensaver files. Fliqlo Web solves this by offering an authentic, full-featured web recreation that runs natively in any Chrome browser in fullscreen, complete with auto-hiding cursor and controls. Furthermore, it includes a companion Chrome Screensaver Extension that leverages the Chrome idle API to automatically launch the screensaver when your Chromebook is left unattended."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How can I run Fliqo in web browser (Fliqlo online)?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Simply visit https://jsrahman.github.io/fliqo-chromebook-and-extension/ in any modern browser (Chrome, Edge, Safari, Firefox). It runs completely client-side with 60 FPS CSS 3D transforms, zero Flash requirements, and works offline."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What custom options are available when running Fliqo in web?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "This full web version includes rich customization: 12-hour (with AM/PM badge) or 24-hour military time, optional live animated seconds card, calendar date display, scale slider from 60% to 140%, realistic mechanical flap click sound effects synthesized via Web Audio API, 4 background themes (Classic Dark, OLED Pure Black, Charcoal Slate, Midnight Navy), 4 digit color palettes (Pure White, Vintage Cream, Retro Amber, Cyber Cyan), 4 Solari typography styles, and curated presets (oled, retro, cyber, neon, minimal, solari)."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I configure Fliqo Web using URL parameters or presets?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes! You can customize any option directly via URL query parameters (such as ?format=24h, ?seconds=true, ?theme=oled, ?color=amber, ?sound=true, ?scale=1.2) or use instant presets (such as ?preset=oled, ?preset=retro, ?preset=cyber). The 'Guide' modal also provides a 1-click 'Copy URL' tool."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How does the Chrome Extension screensaver work on Chromebooks?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "The companion Chrome Extension monitors user inactivity using the Chrome idle API. When you step away from your Chromebook for the specified threshold (e.g. 5 minutes), it automatically opens the full-screen Fliqlo screensaver window. Pressing Esc, typing any key, or moving the mouse wakes your device and closes the screensaver immediately."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do AI agents (ChatGPT, Claude, Perplexity, Gemini) get Fliqlo solutions?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "AI agents can access standardized machine-readable knowledge at /llms.txt and /llms-full.txt, which detail the Chrome OS screensaver workaround, extension installation, custom URL syntax, and architectural specifications per llmstxt.org."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
+    <!-- Main Application Container -->
     <div id="root"></div>
+
+    <!-- Noscript Fallback for Search Crawlers, Text Browsers, and Users without JavaScript -->
+    <noscript>
+      <div style="max-width: 800px; margin: 40px auto; padding: 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #e5e5e5; background: #161618; border-radius: 12px; line-height: 1.6;">
+        <h1 style="color: #ffffff; font-size: 28px; margin-bottom: 12px;">Fliqlo &amp; Fliqo Run in Web – Free Online Screensaver for Chrome OS, Mac &amp; Windows</h1>
+        <p style="font-size: 16px; color: #a1a1aa;">
+          An authentic web recreation of the iconic Solari split-flap flip clock screensaver. Solves the Chrome OS &amp; Chromebook screensaver problem and provides a full web edition with custom options.
+        </p>
+        <h2 style="color: #ffffff; font-size: 20px; margin-top: 24px;">Solving the Chrome OS Screensaver Problem</h2>
+        <p>Chrome OS does not run traditional desktop screensavers (.saver or .scr files). Fliqlo Web solves this by providing:</p>
+        <ul>
+          <li><strong>Fullscreen Web Mode:</strong> Press F or click Fullscreen to transform your Chromebook into an authentic flip clock with auto-hiding controls.</li>
+          <li><strong>Chrome Screensaver Extension:</strong> Automatic idle detection that launches the full-screen clock when you step away.</li>
+          <li><strong>PWA Installation:</strong> Install directly onto your Chromebook shelf for offline access.</li>
+        </ul>
+        <h2 style="color: #ffffff; font-size: 20px; margin-top: 24px;">Full Custom Options Available When You Run Fliqo in Web</h2>
+        <ul>
+          <li>12-Hour (with AM/PM flap badge) and 24-Hour military formats.</li>
+          <li>Animated seconds flip unit card.</li>
+          <li>Authentic mechanical plastic flap sound effects via Web Audio API.</li>
+          <li>Background themes: Classic Dark, OLED Pure Black, Charcoal Slate, Deep Midnight.</li>
+          <li>Digit colors: Pure White, Vintage Cream, Retro Amber, Cyber Cyan.</li>
+          <li>Custom Solari typography: Fliqlo Official, Barlow Condensed, Libre Baskerville, Ubuntu.</li>
+          <li>Scale slider from 60% to 140% (or 40% to 400% via URL).</li>
+          <li>Instant curated presets (e.g., <code>?preset=oled</code>, <code>?preset=retro</code>, <code>?preset=cyber</code>).</li>
+          <li>URL query parameters (e.g., <code>?format=24h&amp;theme=oled&amp;color=amber</code>).</li>
+        </ul>
+        <p style="margin-top: 20px; font-size: 14px; color: #71717a;">Please enable JavaScript in your browser to run the animated flip clock.</p>
+      </div>
+    </noscript>
+
+    <!-- Semantic Accessible Content for Screen Readers, Headless Crawlers, and AI Agents -->
+    <section id="seo-knowledge" class="sr-only" aria-label="Fliqlo Web Information and Chrome OS Screensaver Guide">
+      <h1>Fliqlo &amp; Fliqo Run in Web – Flip Clock Screensaver with Full Custom Options</h1>
+      <p>
+        Fliqlo Web (commonly searched as Fliqo Web, Fliqo Run in Web, or Fliqlo Chromebook) is the definitive web-based recreation of the classic Solari split-flap clock. It brings the beloved minimalist screensaver aesthetic to any modern web browser without requiring Adobe Flash or desktop installer binaries.
+      </p>
+
+      <h2>How Fliqlo Web Solves the Chrome OS Screensaver Problem</h2>
+      <p>
+        Chromebook users face a persistent problem: Google Chrome OS does not support native .saver (macOS) or .scr (Windows) files provided by desktop flip clock developers. Consequently, Chromebook users have been unable to use the iconic Fliqlo screensaver. Fliqlo Web provides three comprehensive solutions:
+      </p>
+      <ol>
+        <li>
+          <strong>Browser Fullscreen Screensaver:</strong> Open the web app on any Chromebook and press F. The clock expands to native fullscreen with 60 FPS CSS 3D transforms. The cursor and bottom toolbar automatically fade away after 3 seconds of inactivity.
+        </li>
+        <li>
+          <strong>Chrome Screensaver Extension:</strong> Download fliqlo-extension.zip directly from the bottom bar. Load it into chrome://extensions to gain automatic idle detection that launches the full-screen flip clock whenever your Chromebook is left untouched.
+        </li>
+        <li>
+          <strong>Chromebook PWA / Kiosk Mode:</strong> Install the web app as a Progressive Web App onto your Chrome OS shelf, or deploy it in Chrome Kiosk mode for classrooms, reception desks, and smart home dashboards.
+        </li>
+      </ol>
+
+      <h2>Full Web Version with Custom Options (Fliqo Run in Web)</h2>
+      <p>
+        Unlike desktop editions that have static styling, Fliqlo Web provides extensive customization options:
+      </p>
+      <ul>
+        <li><strong>Time Display:</strong> Switch between 12-Hour format (with AM/PM split-flap badge) and 24-Hour format.</li>
+        <li><strong>Flip Seconds:</strong> Real-time animated seconds card flipping downward with gravity drop shadows.</li>
+        <li><strong>Mechanical Sound FX:</strong> Procedural plastic flap click audio synthesized via Web Audio API.</li>
+        <li><strong>Themes:</strong> Classic Dark vignette, OLED Pure Black (#000000) for OLED battery preservation, Charcoal Slate, and Deep Midnight.</li>
+        <li><strong>Digit Colors:</strong> Pure White, Vintage Cream (#f4ecd8), Retro Amber (#f59e0b), and Cyber Cyan (#06b6d4).</li>
+        <li><strong>Font Families:</strong> Official Fliqlo Solari font, Barlow Condensed, Libre Baskerville serif, and Ubuntu humanist sans-serif.</li>
+        <li><strong>Custom Sizing:</strong> Smooth scale from 60% to 140%, with independent horizontal and vertical sizing.</li>
+        <li><strong>Curated Presets:</strong> Instant styles using ?preset=oled, ?preset=retro, ?preset=cyber, ?preset=neon, ?preset=minimal, or ?preset=solari.</li>
+        <li><strong>URL Customization:</strong> Configure any option via URL search parameters (e.g. ?format=24h&amp;theme=oled&amp;color=amber&amp;seconds=true).</li>
+      </ul>
+
+      <h2>Keyboard Shortcuts Reference</h2>
+      <ul>
+        <li><kbd>F</kbd>: Toggle Fullscreen mode</li>
+        <li><kbd>S</kbd>: Open Settings customization dialog</li>
+        <li><kbd>Space</kbd>: Quick toggle between 12h and 24h format</li>
+        <li><kbd>I</kbd> or <kbd>?</kbd>: Open Fliqlo Web Guide and Chrome OS solutions modal</li>
+        <li><kbd>Esc</kbd>: Exit fullscreen or close settings modal</li>
+      </ul>
+    </section>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

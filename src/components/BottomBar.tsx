@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Maximize, Minimize, Puzzle, Check } from 'lucide-react';
+import { Settings, Maximize, Minimize, Puzzle, Check, HelpCircle } from 'lucide-react';
 
 interface BottomBarProps {
   onOpenSettings: () => void;
+  onOpenInfo: () => void;
   isVisible: boolean;
 }
 
 export const BottomBar: React.FC<BottomBarProps> = ({
   onOpenSettings,
+  onOpenInfo,
   isVisible,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -68,6 +70,17 @@ export const BottomBar: React.FC<BottomBarProps> = ({
       </div>
 
       <div className="bottom-buttons-container">
+        {/* Button: Guide / About & Chrome OS Guide */}
+        <button
+          className="action-button guide-button"
+          onClick={onOpenInfo}
+          title="Fliqlo Web Guide & Chrome OS Solution"
+          aria-label="Fliqlo Web Guide and Chrome OS Solution"
+        >
+          <HelpCircle size={17} />
+          <span>Guide</span>
+        </button>
+
         {/* Button: Extension Download */}
         <a
           href={extensionDownloadUrl}

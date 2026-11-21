@@ -2,25 +2,53 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { FlipClock } from './components/FlipClock';
 import { BottomBar } from './components/BottomBar';
 import { SettingsModal } from './components/SettingsModal';
+import { InfoModal } from './components/InfoModal';
 import { ClockSettings, DEFAULT_SETTINGS } from './types';
+import { parseUrlSettings } from './utils/urlSettings';
 import './styles/flipclock.css';
 
 const STORAGE_KEY = 'fliqlo_clock_settings_v1';
 
+function normalizeSettings(raw: Partial<ClockSettings> | null | undefined): ClockSettings {
+  const merged = { ...DEFAULT_SETTINGS, ...(raw || {}) };
+  if (
+    (merged.fontFamily as string) === 'flip-white' ||
+    (merged.fontFamily as string) === 'fliqlo-mac'
+  ) {
+    merged.fontFamily = 'fliqlo';
+  }
+  return merged;
+}
+
 export function App() {
   const [settings, setSettings] = useState<ClockSettings>(() => {
+    let initial = DEFAULT_SETTINGS;
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+        initial = normalizeSettings(JSON.parse(saved));
       }
     } catch {
       // ignore
     }
-    return DEFAULT_SETTINGS;
+
+    // Apply URL parameter overrides (for instant custom options sharing / embedding)
+    if (typeof window !== 'undefined') {
+      const urlOverrides = parseUrlSettings(window.location.search);
+      initial = normalizeSettings({ ...initial, ...urlOverrides });
+    }
+
+    return initial;
   });
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      return p.get('guide') === '1' || p.get('info') === '1' || p.get('help') === '1';
+    }
+    return false;
+  });
   const [isControlsVisible, setIsControlsVisible] = useState(true);
   const [isCursorHidden, setIsCursorHidden] = useState(false);
 
@@ -39,7 +67,7 @@ export function App() {
     if (chromeObj?.storage?.sync) {
       chromeObj.storage.sync.get(STORAGE_KEY, (result: Record<string, unknown>) => {
         if (result && result[STORAGE_KEY]) {
-          setSettings((prev) => ({
+          setSettings((prev) => normalizeSettings({
             ...prev,
             ...(result[STORAGE_KEY] as Partial<ClockSettings>),
           }));
@@ -49,7 +77,7 @@ export function App() {
       // Listen for runtime updates from the extension popup
       const handleStorageChange = (changes: Record<string, { newValue?: unknown }>, area: string) => {
         if (area === 'sync' && changes[STORAGE_KEY]?.newValue) {
-          setSettings((prev) => ({
+          setSettings((prev) => normalizeSettings({
             ...prev,
             ...(changes[STORAGE_KEY].newValue as Partial<ClockSettings>),
           }));
@@ -102,13 +130,13 @@ export function App() {
       window.clearTimeout(idleTimerRef.current);
     }
 
-    if (settings.autoHideControls && !isSettingsOpen) {
+    if (settings.autoHideControls && !isSettingsOpen && !isInfoOpen) {
       idleTimerRef.current = window.setTimeout(() => {
         setIsControlsVisible(false);
         setIsCursorHidden(true);
       }, 3000);
     }
-  }, [settings.autoHideControls, isSettingsOpen]);
+  }, [settings.autoHideControls, isSettingsOpen, isInfoOpen]);
 
   useEffect(() => {
     const onMouseMove = () => handleUserActivity();
@@ -245,6 +273,12 @@ export function App() {
           setIsSettingsOpen(false);
           return;
         }
+
+        if (isInfoOpen) {
+          e.preventDefault();
+          setIsInfoOpen(false);
+          return;
+        }
       } else if (e.key === 'f' || e.key === 'F') {
         e.preventDefault();
         // Toggle fullscreen
@@ -256,6 +290,9 @@ export function App() {
       } else if (e.key === 's' || e.key === 'S') {
         e.preventDefault();
         setIsSettingsOpen((prev) => !prev);
+      } else if (e.key === 'i' || e.key === 'I' || e.key === '?') {
+        e.preventDefault();
+        setIsInfoOpen((prev) => !prev);
       } else if (e.code === 'Space') {
         e.preventDefault();
         handleUpdateSettings({
@@ -266,7 +303,7 @@ export function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isExtensionScreensaver, isSettingsOpen, settings.format, handleUpdateSettings]);
+  }, [isExtensionScreensaver, isSettingsOpen, isInfoOpen, settings.format, handleUpdateSettings]);
 
   return (
     <div
@@ -285,7 +322,8 @@ export function App() {
       {!isExtensionScreensaver && (
         <BottomBar
           onOpenSettings={() => setIsSettingsOpen(true)}
-          isVisible={isControlsVisible || isSettingsOpen}
+          onOpenInfo={() => setIsInfoOpen(true)}
+          isVisible={isControlsVisible || isSettingsOpen || isInfoOpen}
         />
       )}
 
@@ -296,6 +334,13 @@ export function App() {
         settings={settings}
         onUpdateSettings={handleUpdateSettings}
         onResetDefaults={handleResetDefaults}
+      />
+
+      {/* About & Chrome OS Guide Modal */}
+      <InfoModal
+        isOpen={isInfoOpen}
+        onClose={() => setIsInfoOpen(false)}
+        settings={settings}
       />
     </div>
   );
