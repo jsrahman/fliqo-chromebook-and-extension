@@ -596,6 +596,43 @@
   border-color: rgba(255, 255, 255, 0.35);
 }
 
+.action-button.github-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.action-button.github-button:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.github-star-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffcc00;
+  margin-left: 2px;
+  transition: all 0.18s ease;
+}
+
+.action-button:hover .github-star-badge {
+  background: rgba(255, 204, 0, 0.2);
+  border-color: rgba(255, 204, 0, 0.4);
+}
+
+.github-star-badge svg {
+  width: 10px !important;
+  height: 10px !important;
+  fill: #ffcc00 !important;
+  color: #ffcc00 !important;
+}
+
 .action-button svg {
   width: 17px;
   height: 17px;

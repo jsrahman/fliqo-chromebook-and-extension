@@ -27,6 +27,10 @@ const DEFAULT_EXT_CONFIG = {
   autoLaunchEnabled: true,
   keepAwake: true,
   exitOnActivity: true,
+  enableDurationLimit: false,
+  durationMode: 'duration', // 'duration' | 'until'
+  durationMinutes: 30, // Default 30 min duration
+  untilTime: '', // "HH:MM" e.g. "17:00"
   excludedSites: [
     { domain: 'youtube.com', mode: 'playing' },
     { domain: 'netflix.com', mode: 'playing' },
@@ -35,19 +39,57 @@ const DEFAULT_EXT_CONFIG = {
 
 let currentClockSettings = { ...DEFAULT_CLOCK_SETTINGS };
 let currentExtConfig = { ...DEFAULT_EXT_CONFIG };
+let screensaverStatus = { isOpen: false, endTime: null };
+let statusPollTimer = null;
 
-// DOM Elements
+// DOM Elements: Navigation Tabs
+const tabButtons = document.querySelectorAll('.tab-btn');
+const tabPanes = document.querySelectorAll('.tab-pane');
+
+// DOM Elements: Header & Quick Actions
 const btnLaunch = document.getElementById('btnLaunch');
+const btnLaunchLarge = document.getElementById('btnLaunchLarge');
+
+// DOM Elements: Duration & Keep Awake (Tab 1)
+const chkDurationLimit = document.getElementById('chkDurationLimit');
+const btnQuickAdd15 = document.getElementById('btnQuickAdd15');
+const btnQuickAdd30 = document.getElementById('btnQuickAdd30');
+const btnQuickAdd60 = document.getElementById('btnQuickAdd60');
+const durChips = document.querySelectorAll('.dur-chip');
+const chipUntil = document.getElementById('chipUntil');
+const untilTimeRow = document.getElementById('untilTimeRow');
+const inpUntilTime = document.getElementById('inpUntilTime');
+const btnApplyUntil = document.getElementById('btnApplyUntil');
+
+const activeScreensaverBanner = document.getElementById('activeScreensaverBanner');
+const bannerText = document.getElementById('bannerText');
+const btnBannerClose = document.getElementById('btnBannerClose');
+
 const chkAutoLaunch = document.getElementById('chkAutoLaunch');
 const selIdleTimeout = document.getElementById('selIdleTimeout');
 const chkKeepAwake = document.getElementById('chkKeepAwake');
 
+// DOM Elements: Excluded Websites (Tab 2)
+const btnExcludeCurrentTab = document.getElementById('btnExcludeCurrentTab');
+const txtNewDomain = document.getElementById('txtNewDomain');
+const btnAddDomain = document.getElementById('btnAddDomain');
+const excludedSitesList = document.getElementById('excludedSitesList');
+
+// DOM Elements: Time & Display (Tab 3)
 const btn12h = document.getElementById('btn12h');
 const btn24h = document.getElementById('btn24h');
 const rowAmPm = document.getElementById('rowAmPm');
 const chkAmPm = document.getElementById('chkAmPm');
 const chkSeconds = document.getElementById('chkSeconds');
 const chkDate = document.getElementById('chkDate');
+
+// DOM Elements: Scale & Typography (Tab 4)
+const fontButtons = document.querySelectorAll('.font-btn');
+const btnResetFontSize = document.getElementById('btnResetFontSize');
+const rngFontScaleX = document.getElementById('rngFontScaleX');
+const lblFontScaleX = document.getElementById('lblFontScaleX');
+const rngFontScaleY = document.getElementById('rngFontScaleY');
+const lblFontScaleY = document.getElementById('lblFontScaleY');
 
 const btnResetScale = document.getElementById('btnResetScale');
 const rngOverallScale = document.getElementById('rngOverallScale');
@@ -57,28 +99,41 @@ const lblScaleX = document.getElementById('lblScaleX');
 const rngScaleY = document.getElementById('rngScaleY');
 const lblScaleY = document.getElementById('lblScaleY');
 
-const btnResetFontSize = document.getElementById('btnResetFontSize');
-const rngFontScaleX = document.getElementById('rngFontScaleX');
-const lblFontScaleX = document.getElementById('lblFontScaleX');
-const rngFontScaleY = document.getElementById('rngFontScaleY');
-const lblFontScaleY = document.getElementById('lblFontScaleY');
-
-const btnExcludeCurrentTab = document.getElementById('btnExcludeCurrentTab');
-const txtNewDomain = document.getElementById('txtNewDomain');
-const btnAddDomain = document.getElementById('btnAddDomain');
-const excludedSitesList = document.getElementById('excludedSitesList');
-
-const fontButtons = document.querySelectorAll('.font-btn');
+// DOM Elements: Atmosphere & Audio (Tab 5)
+const bgThemeButtons = document.querySelectorAll('#bgThemeOptions .color-chip');
+const textColorButtons = document.querySelectorAll('#textColorOptions .color-chip');
 const chkSound = document.getElementById('chkSound');
 const rowVolume = document.getElementById('rowVolume');
 const rngVolume = document.getElementById('rngVolume');
 const lblVolume = document.getElementById('lblVolume');
 
-const bgThemeButtons = document.querySelectorAll('#bgThemeOptions .color-chip');
-const textColorButtons = document.querySelectorAll('#textColorOptions .color-chip');
+// DOM Elements: Reset (Tab 6)
 const btnResetAll = document.getElementById('btnResetAll');
 
-// Load stored values from chrome.storage.sync
+// =============================================================================
+// TAB SWITCHING
+// =============================================================================
+tabButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const tabName = btn.dataset.tab;
+    tabButtons.forEach((b) => {
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+    });
+    tabPanes.forEach((p) => p.classList.remove('active'));
+
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+    const targetPane = document.getElementById(`tabContent-${tabName}`);
+    if (targetPane) {
+      targetPane.classList.add('active');
+    }
+  });
+});
+
+// =============================================================================
+// LOAD STORED PREFERENCES
+// =============================================================================
 chrome.storage.sync.get([CLOCK_STORAGE_KEY, EXT_CONFIG_KEY], (res) => {
   if (res[CLOCK_STORAGE_KEY]) {
     currentClockSettings = { ...DEFAULT_CLOCK_SETTINGS, ...res[CLOCK_STORAGE_KEY] };
@@ -93,15 +148,66 @@ chrome.storage.sync.get([CLOCK_STORAGE_KEY, EXT_CONFIG_KEY], (res) => {
     currentExtConfig = { ...DEFAULT_EXT_CONFIG, ...res[EXT_CONFIG_KEY] };
   }
   renderUI();
+  pollScreensaverStatus();
 });
 
+// Polling screensaver active status
+function pollScreensaverStatus() {
+  chrome.runtime.sendMessage({ action: 'get_screensaver_status' }, (res) => {
+    if (chrome.runtime.lastError || !res) return;
+    screensaverStatus = res;
+    updateBannerUI();
+  });
+
+  if (!statusPollTimer) {
+    statusPollTimer = setInterval(() => {
+      chrome.runtime.sendMessage({ action: 'get_screensaver_status' }, (res) => {
+        if (!chrome.runtime.lastError && res) {
+          screensaverStatus = res;
+          updateBannerUI();
+        }
+      });
+    }, 2000);
+  }
+}
+
+function updateBannerUI() {
+  if (screensaverStatus.isOpen) {
+    activeScreensaverBanner.style.display = 'flex';
+    if (screensaverStatus.endTime) {
+      const remainingMs = screensaverStatus.endTime - Date.now();
+      if (remainingMs > 0) {
+        const remainingMin = Math.ceil(remainingMs / 60000);
+        const endDate = new Date(screensaverStatus.endTime);
+        const endStr = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        bannerText.textContent = `Running • Closes at ${endStr} (${remainingMin}m left)`;
+      } else {
+        bannerText.textContent = `Screensaver closing...`;
+      }
+    } else {
+      bannerText.textContent = `Screensaver active (Unlimited)`;
+    }
+  } else {
+    activeScreensaverBanner.style.display = 'none';
+  }
+}
+
+// =============================================================================
+// RENDER UI STATE
+// =============================================================================
 function renderUI() {
-  // Extension config
+  // 1. Duration & Auto-Run (Tab 1)
+  chkDurationLimit.checked = !!currentExtConfig.enableDurationLimit;
+  renderDurationChips();
+
   chkAutoLaunch.checked = !!currentExtConfig.autoLaunchEnabled;
   selIdleTimeout.value = String(currentExtConfig.idleTimeoutMinutes || 5);
   chkKeepAwake.checked = !!currentExtConfig.keepAwake;
 
-  // Clock format
+  // 2. Excluded Sites List (Tab 2)
+  renderExcludedSites();
+
+  // 3. Time & Display (Tab 3)
   if (currentClockSettings.format === '24h') {
     btn24h.classList.add('active');
     btn12h.classList.remove('active');
@@ -111,13 +217,27 @@ function renderUI() {
     btn24h.classList.remove('active');
     rowAmPm.style.display = 'flex';
   }
-
-  // Toggles
   chkAmPm.checked = !!currentClockSettings.showAmPm;
   chkSeconds.checked = !!currentClockSettings.showSeconds;
   chkDate.checked = !!currentClockSettings.showDate;
 
-  // Sliders
+  // 4. Scaling & Typography (Tab 4)
+  fontButtons.forEach((btn) => {
+    if (btn.dataset.font === currentClockSettings.fontFamily) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  const fScaleX = currentClockSettings.fontScaleX ?? 1.0;
+  rngFontScaleX.value = fScaleX;
+  lblFontScaleX.textContent = Math.round(fScaleX * 100) + '%';
+
+  const fScaleY = currentClockSettings.fontScaleY ?? 1.0;
+  rngFontScaleY.value = fScaleY;
+  lblFontScaleY.textContent = Math.round(fScaleY * 100) + '%';
+
   const scale = currentClockSettings.scale ?? 1.0;
   rngOverallScale.value = scale;
   lblOverallScale.textContent = Math.round(scale * 100) + '%';
@@ -130,32 +250,7 @@ function renderUI() {
   rngScaleY.value = scaleY;
   lblScaleY.textContent = Math.round(scaleY * 100) + '%';
 
-  // Fonts
-  fontButtons.forEach((btn) => {
-    if (btn.dataset.font === currentClockSettings.fontFamily) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-  });
-
-  // Font Size Dimensions
-  const fScaleX = currentClockSettings.fontScaleX ?? 1.0;
-  rngFontScaleX.value = fScaleX;
-  lblFontScaleX.textContent = Math.round(fScaleX * 100) + '%';
-
-  const fScaleY = currentClockSettings.fontScaleY ?? 1.0;
-  rngFontScaleY.value = fScaleY;
-  lblFontScaleY.textContent = Math.round(fScaleY * 100) + '%';
-
-  // Sound
-  chkSound.checked = !!currentClockSettings.soundEnabled;
-  rowVolume.style.display = currentClockSettings.soundEnabled ? 'flex' : 'none';
-  const vol = currentClockSettings.soundVolume ?? 0.5;
-  rngVolume.value = vol;
-  lblVolume.textContent = Math.round(vol * 100) + '%';
-
-  // Atmosphere: Background Themes
+  // 5. Atmosphere & Audio (Tab 5)
   bgThemeButtons.forEach((btn) => {
     if (btn.dataset.bg === currentClockSettings.backgroundTheme) {
       btn.classList.add('active');
@@ -164,7 +259,6 @@ function renderUI() {
     }
   });
 
-  // Atmosphere: Text Colors
   textColorButtons.forEach((btn) => {
     if (btn.dataset.color === currentClockSettings.textColorTheme) {
       btn.classList.add('active');
@@ -173,19 +267,58 @@ function renderUI() {
     }
   });
 
-  // Excluded Sites List
-  renderExcludedSites();
+  chkSound.checked = !!currentClockSettings.soundEnabled;
+  rowVolume.style.display = currentClockSettings.soundEnabled ? 'flex' : 'none';
+  const vol = currentClockSettings.soundVolume ?? 0.5;
+  rngVolume.value = vol;
+  lblVolume.textContent = Math.round(vol * 100) + '%';
 }
 
+// Render Duration Chips
+function renderDurationChips() {
+  const isLimitEnabled = !!currentExtConfig.enableDurationLimit;
+  const mode = currentExtConfig.durationMode || 'duration';
+  const mins = currentExtConfig.durationMinutes || 0;
+  const until = currentExtConfig.untilTime || '';
+
+  durChips.forEach((chip) => {
+    chip.classList.remove('active');
+
+    if (!isLimitEnabled) {
+      if (chip.id === 'chipInfinite') chip.classList.add('active');
+      return;
+    }
+
+    if (mode === 'until') {
+      if (chip.id === 'chipUntil') {
+        chip.classList.add('active');
+        chip.textContent = until ? until : 'Until...';
+      }
+    } else {
+      const chipMin = parseInt(chip.dataset.min, 10);
+      if (chipMin === mins) {
+        chip.classList.add('active');
+      }
+    }
+  });
+
+  if (isLimitEnabled && mode === 'until') {
+    untilTimeRow.style.display = 'flex';
+    if (until) inpUntilTime.value = until;
+  } else {
+    untilTimeRow.style.display = 'none';
+  }
+}
+
+// Render Excluded Sites List
 function renderExcludedSites() {
-  if (!excludedSitesList) return;
   excludedSitesList.innerHTML = '';
   const sites = currentExtConfig.excludedSites || [];
 
   if (sites.length === 0) {
     const emptyHint = document.createElement('div');
     emptyHint.className = 'empty-sites-hint';
-    emptyHint.textContent = 'No excluded websites added yet.';
+    emptyHint.textContent = 'No excluded websites yet. Add one above.';
     excludedSitesList.appendChild(emptyHint);
     return;
   }
@@ -194,10 +327,10 @@ function renderExcludedSites() {
     const item = document.createElement('div');
     item.className = 'excluded-site-item';
 
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'site-domain-text';
-    nameSpan.textContent = site.domain;
-    nameSpan.title = site.domain;
+    const domainSpan = document.createElement('span');
+    domainSpan.className = 'site-domain-text';
+    domainSpan.textContent = site.domain;
+    domainSpan.title = site.domain;
 
     const controls = document.createElement('div');
     controls.className = 'site-controls';
@@ -205,103 +338,219 @@ function renderExcludedSites() {
     const select = document.createElement('select');
     select.className = 'site-rule-select';
     select.innerHTML = `
-      <option value="always">All Time</option>
-      <option value="playing">While Playing</option>
+      <option value="always" ${site.mode === 'always' ? 'selected' : ''}>All Time</option>
+      <option value="playing" ${site.mode === 'playing' ? 'selected' : ''}>While Playing</option>
     `;
-    select.value = site.mode || 'always';
     select.addEventListener('change', (e) => {
-      const newSites = [...(currentExtConfig.excludedSites || [])];
-      if (newSites[index]) {
-        newSites[index] = { ...newSites[index], mode: e.target.value };
-        saveExtConfig({ excludedSites: newSites });
-      }
+      sites[index].mode = e.target.value;
+      saveExtConfig({ excludedSites: sites });
     });
 
     const btnRemove = document.createElement('button');
     btnRemove.className = 'btn-remove-site';
     btnRemove.innerHTML = '✕';
-    btnRemove.title = `Remove ${site.domain}`;
+    btnRemove.title = 'Remove site';
     btnRemove.addEventListener('click', () => {
-      const newSites = (currentExtConfig.excludedSites || []).filter((_, i) => i !== index);
-      saveExtConfig({ excludedSites: newSites });
+      sites.splice(index, 1);
+      saveExtConfig({ excludedSites: sites });
+      renderExcludedSites();
     });
 
     controls.appendChild(select);
     controls.appendChild(btnRemove);
-    item.appendChild(nameSpan);
+
+    item.appendChild(domainSpan);
     item.appendChild(controls);
     excludedSitesList.appendChild(item);
   });
 }
 
-function addExcludedDomain(rawDomain, defaultMode = 'always') {
-  if (!rawDomain) return;
-  const clean = rawDomain.toLowerCase().trim()
-    .replace(/^https?:\/\//, '')
-    .replace(/\/.*$/, '')
-    .replace(/^www\./, '');
-  if (!clean) return;
-
-  const existing = currentExtConfig.excludedSites || [];
-  if (existing.some((s) => s.domain === clean)) {
-    return;
-  }
-
-  const newSites = [...existing, { domain: clean, mode: defaultMode }];
-  saveExtConfig({ excludedSites: newSites });
-}
-
-function saveClockSettings(partial) {
-  currentClockSettings = { ...currentClockSettings, ...partial };
+// =============================================================================
+// STORAGE SYNC HELPERS
+// =============================================================================
+function saveClockSettings(delta) {
+  currentClockSettings = { ...currentClockSettings, ...delta };
   chrome.storage.sync.set({ [CLOCK_STORAGE_KEY]: currentClockSettings });
-  renderUI();
 }
 
-function saveExtConfig(partial) {
-  currentExtConfig = { ...currentExtConfig, ...partial };
+function saveExtConfig(delta) {
+  currentExtConfig = { ...currentExtConfig, ...delta };
   chrome.storage.sync.set({ [EXT_CONFIG_KEY]: currentExtConfig });
-  chrome.runtime.sendMessage({ action: 'update_idle_timeout' });
-  renderUI();
+  chrome.runtime.sendMessage({ action: 'update_duration_config' });
 }
 
-// Event Listeners
-btnLaunch.addEventListener('click', () => {
-  chrome.runtime.sendMessage({ action: 'launch_screensaver_now' });
-  window.close();
+// =============================================================================
+// EVENT LISTENERS: DURATION & AUTO-RUN (TAB 1)
+// =============================================================================
+chkDurationLimit.addEventListener('change', (e) => {
+  const enabled = e.target.checked;
+  saveExtConfig({
+    enableDurationLimit: enabled,
+    durationMinutes: enabled ? (currentExtConfig.durationMinutes || 30) : 0,
+  });
+  renderDurationChips();
 });
 
+// Quick add buttons: +15m, +30m, +1h
+function handleQuickAdd(mins) {
+  const currentMins = currentExtConfig.enableDurationLimit
+    ? (currentExtConfig.durationMinutes || 0)
+    : 0;
+  const newMins = currentMins + mins;
+
+  saveExtConfig({
+    enableDurationLimit: true,
+    durationMode: 'duration',
+    durationMinutes: newMins,
+  });
+
+  // If screensaver is running, notify background to extend runtime directly
+  if (screensaverStatus.isOpen) {
+    chrome.runtime.sendMessage({ action: 'extend_duration', additionalMinutes: mins }, (res) => {
+      if (res && res.currentEndTime) {
+        screensaverStatus.endTime = res.currentEndTime;
+        updateBannerUI();
+      }
+    });
+  }
+
+  renderDurationChips();
+}
+
+btnQuickAdd15.addEventListener('click', () => handleQuickAdd(15));
+btnQuickAdd30.addEventListener('click', () => handleQuickAdd(30));
+btnQuickAdd60.addEventListener('click', () => handleQuickAdd(60));
+
+// Duration Chips click handler
+durChips.forEach((chip) => {
+  chip.addEventListener('click', () => {
+    if (chip.id === 'chipInfinite') {
+      saveExtConfig({
+        enableDurationLimit: false,
+        durationMode: 'duration',
+        durationMinutes: 0,
+      });
+      renderDurationChips();
+      return;
+    }
+
+    if (chip.id === 'chipUntil') {
+      const isAlreadyActive = chip.classList.contains('active');
+      if (isAlreadyActive && untilTimeRow.style.display !== 'none') {
+        untilTimeRow.style.display = 'none';
+      } else {
+        untilTimeRow.style.display = 'flex';
+        inpUntilTime.focus();
+      }
+      return;
+    }
+
+    const mins = parseInt(chip.dataset.min, 10);
+    // If clicking the currently active chip, toggle back to infinite
+    if (chip.classList.contains('active') && currentExtConfig.enableDurationLimit) {
+      saveExtConfig({
+        enableDurationLimit: false,
+        durationMinutes: 0,
+      });
+    } else {
+      saveExtConfig({
+        enableDurationLimit: true,
+        durationMode: 'duration',
+        durationMinutes: mins,
+      });
+    }
+    renderDurationChips();
+  });
+});
+
+// Apply "Until..." time
+btnApplyUntil.addEventListener('click', () => {
+  const val = inpUntilTime.value;
+  if (!val) return;
+  saveExtConfig({
+    enableDurationLimit: true,
+    durationMode: 'until',
+    untilTime: val,
+  });
+  renderDurationChips();
+});
+
+inpUntilTime.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    btnApplyUntil.click();
+  }
+});
+
+// Close active screensaver from banner
+btnBannerClose.addEventListener('click', () => {
+  chrome.runtime.sendMessage({ action: 'close_screensaver' }, () => {
+    screensaverStatus.isOpen = false;
+    updateBannerUI();
+  });
+});
+
+// Auto-Launch & Idle Timeout
 chkAutoLaunch.addEventListener('change', (e) => {
   saveExtConfig({ autoLaunchEnabled: e.target.checked });
+  chrome.runtime.sendMessage({ action: 'update_idle_timeout' });
 });
 
 selIdleTimeout.addEventListener('change', (e) => {
   saveExtConfig({ idleTimeoutMinutes: parseInt(e.target.value, 10) });
+  chrome.runtime.sendMessage({ action: 'update_idle_timeout' });
 });
 
 chkKeepAwake.addEventListener('change', (e) => {
   saveExtConfig({ keepAwake: e.target.checked });
 });
 
-btnAddDomain?.addEventListener('click', () => {
-  addExcludedDomain(txtNewDomain.value);
-  txtNewDomain.value = '';
-});
+// Launch Screensaver Now
+const triggerLaunch = () => {
+  chrome.runtime.sendMessage({ action: 'launch_screensaver_now' }, () => {
+    screensaverStatus.isOpen = true;
+    updateBannerUI();
+  });
+};
+btnLaunch.addEventListener('click', triggerLaunch);
+btnLaunchLarge.addEventListener('click', triggerLaunch);
 
-txtNewDomain?.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    addExcludedDomain(txtNewDomain.value);
+// =============================================================================
+// EVENT LISTENERS: EXCLUDED WEBSITES (TAB 2)
+// =============================================================================
+function addExcludedSite(domain, mode = 'always') {
+  if (!domain) return;
+  const cleanDomain = domain.toLowerCase().trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  if (!cleanDomain) return;
+
+  const sites = currentExtConfig.excludedSites || [];
+  if (!sites.some((s) => s.domain === cleanDomain)) {
+    sites.push({ domain: cleanDomain, mode });
+    saveExtConfig({ excludedSites: sites });
+    renderExcludedSites();
+  }
+}
+
+btnAddDomain.addEventListener('click', () => {
+  const val = txtNewDomain.value.trim();
+  if (val) {
+    addExcludedSite(val, 'always');
     txtNewDomain.value = '';
   }
 });
 
-btnExcludeCurrentTab?.addEventListener('click', async () => {
+txtNewDomain.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    btnAddDomain.click();
+  }
+});
+
+btnExcludeCurrentTab.addEventListener('click', async () => {
   try {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
     if (tabs && tabs[0] && tabs[0].url) {
-      const urlObj = new URL(tabs[0].url);
-      if (urlObj.protocol === 'http:' || urlObj.protocol === 'https:') {
-        const domain = urlObj.hostname.replace(/^www\./, '');
-        addExcludedDomain(domain, 'always');
+      const url = new URL(tabs[0].url);
+      if (url.hostname && !url.hostname.startsWith('chrome')) {
+        addExcludedSite(url.hostname, 'playing');
       }
     }
   } catch (err) {
@@ -309,11 +558,57 @@ btnExcludeCurrentTab?.addEventListener('click', async () => {
   }
 });
 
-btn12h.addEventListener('click', () => saveClockSettings({ format: '12h' }));
-btn24h.addEventListener('click', () => saveClockSettings({ format: '24h' }));
+// =============================================================================
+// EVENT LISTENERS: TIME & DISPLAY (TAB 3)
+// =============================================================================
+btn12h.addEventListener('click', () => {
+  btn12h.classList.add('active');
+  btn24h.classList.remove('active');
+  rowAmPm.style.display = 'flex';
+  saveClockSettings({ format: '12h' });
+});
+
+btn24h.addEventListener('click', () => {
+  btn24h.classList.add('active');
+  btn12h.classList.remove('active');
+  rowAmPm.style.display = 'none';
+  saveClockSettings({ format: '24h' });
+});
+
 chkAmPm.addEventListener('change', (e) => saveClockSettings({ showAmPm: e.target.checked }));
 chkSeconds.addEventListener('change', (e) => saveClockSettings({ showSeconds: e.target.checked }));
 chkDate.addEventListener('change', (e) => saveClockSettings({ showDate: e.target.checked }));
+
+// =============================================================================
+// EVENT LISTENERS: SCALING & TYPOGRAPHY (TAB 4)
+// =============================================================================
+fontButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    fontButtons.forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    saveClockSettings({ fontFamily: btn.dataset.font });
+  });
+});
+
+rngFontScaleX.addEventListener('input', (e) => {
+  const val = parseFloat(e.target.value);
+  lblFontScaleX.textContent = Math.round(val * 100) + '%';
+  saveClockSettings({ fontScaleX: val });
+});
+
+rngFontScaleY.addEventListener('input', (e) => {
+  const val = parseFloat(e.target.value);
+  lblFontScaleY.textContent = Math.round(val * 100) + '%';
+  saveClockSettings({ fontScaleY: val });
+});
+
+btnResetFontSize.addEventListener('click', () => {
+  rngFontScaleX.value = 1.0;
+  rngFontScaleY.value = 1.0;
+  lblFontScaleX.textContent = '100%';
+  lblFontScaleY.textContent = '100%';
+  saveClockSettings({ fontScaleX: 1.0, fontScaleY: 1.0 });
+});
 
 rngOverallScale.addEventListener('input', (e) => {
   const val = parseFloat(e.target.value);
@@ -334,32 +629,36 @@ rngScaleY.addEventListener('input', (e) => {
 });
 
 btnResetScale.addEventListener('click', () => {
+  rngOverallScale.value = 1.0;
+  rngScaleX.value = 1.0;
+  rngScaleY.value = 1.0;
+  lblOverallScale.textContent = '100%';
+  lblScaleX.textContent = '100%';
+  lblScaleY.textContent = '100%';
   saveClockSettings({ scale: 1.0, scaleX: 1.0, scaleY: 1.0 });
 });
 
-fontButtons.forEach((btn) => {
+// =============================================================================
+// EVENT LISTENERS: ATMOSPHERE & AUDIO (TAB 5)
+// =============================================================================
+bgThemeButtons.forEach((btn) => {
   btn.addEventListener('click', () => {
-    saveClockSettings({ fontFamily: btn.dataset.font });
+    bgThemeButtons.forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    saveClockSettings({ backgroundTheme: btn.dataset.bg });
   });
 });
 
-rngFontScaleX.addEventListener('input', (e) => {
-  const val = parseFloat(e.target.value);
-  lblFontScaleX.textContent = Math.round(val * 100) + '%';
-  saveClockSettings({ fontScaleX: val });
-});
-
-rngFontScaleY.addEventListener('input', (e) => {
-  const val = parseFloat(e.target.value);
-  lblFontScaleY.textContent = Math.round(val * 100) + '%';
-  saveClockSettings({ fontScaleY: val });
-});
-
-btnResetFontSize.addEventListener('click', () => {
-  saveClockSettings({ fontScaleX: 1.0, fontScaleY: 1.0 });
+textColorButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    textColorButtons.forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    saveClockSettings({ textColorTheme: btn.dataset.color });
+  });
 });
 
 chkSound.addEventListener('change', (e) => {
+  rowVolume.style.display = e.target.checked ? 'flex' : 'none';
   saveClockSettings({ soundEnabled: e.target.checked });
 });
 
@@ -369,18 +668,9 @@ rngVolume.addEventListener('input', (e) => {
   saveClockSettings({ soundVolume: val });
 });
 
-bgThemeButtons.forEach((btn) => {
-  btn.addEventListener('click', () => {
-    saveClockSettings({ backgroundTheme: btn.dataset.bg });
-  });
-});
-
-textColorButtons.forEach((btn) => {
-  btn.addEventListener('click', () => {
-    saveClockSettings({ textColorTheme: btn.dataset.color });
-  });
-});
-
+// =============================================================================
+// EVENT LISTENERS: RESET (TAB 6)
+// =============================================================================
 btnResetAll.addEventListener('click', () => {
   currentClockSettings = { ...DEFAULT_CLOCK_SETTINGS };
   currentExtConfig = { ...DEFAULT_EXT_CONFIG };
@@ -389,5 +679,55 @@ btnResetAll.addEventListener('click', () => {
     [EXT_CONFIG_KEY]: currentExtConfig,
   });
   chrome.runtime.sendMessage({ action: 'update_idle_timeout' });
+  chrome.runtime.sendMessage({ action: 'update_duration_config' });
   renderUI();
 });
+
+// =============================================================================
+// GITHUB STARS LOADER
+// =============================================================================
+const txtHeaderStars = document.getElementById('txtHeaderStars');
+const txtTabStars = document.getElementById('txtTabStars');
+
+function loadGitHubStars() {
+  const GITHUB_REPO = 'jsrahman/fliqo-chromebook-and-extension';
+  const CACHE_KEY = 'fliqlo_github_stars_cache';
+
+  const updateDisplay = (stars) => {
+    if (txtHeaderStars) txtHeaderStars.textContent = String(stars);
+    if (txtTabStars) txtTabStars.textContent = String(stars);
+  };
+
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const { count, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < 10 * 60 * 1000 && typeof count === 'number') {
+        updateDisplay(count);
+        return;
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  fetch(`https://api.github.com/repos/${GITHUB_REPO}`)
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      if (data && typeof data.stargazers_count === 'number') {
+        updateDisplay(data.stargazers_count);
+        try {
+          localStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({ count: data.stargazers_count, timestamp: Date.now() })
+          );
+        } catch {
+          // ignore
+        }
+      }
+    })
+    .catch(() => {});
+}
+
+loadGitHubStars();
+

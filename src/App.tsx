@@ -5,6 +5,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { InfoModal } from './components/InfoModal';
 import { ClockSettings, DEFAULT_SETTINGS } from './types';
 import { parseUrlSettings } from './utils/urlSettings';
+import { isFullscreenActive, exitFullscreenSafe, toggleFullscreenSafe } from './utils/fullscreen';
 import './styles/flipclock.css';
 
 const STORAGE_KEY = 'fliqlo_clock_settings_v1';
@@ -55,10 +56,11 @@ export function App() {
   const idleTimerRef = useRef<number | null>(null);
 
   // Check if opened with ?mode=screensaver or ?hideControls=true (e.g. from Chrome Extension screensaver)
-  const isExtensionScreensaver = typeof window !== 'undefined' && (
-    new URLSearchParams(window.location.search).get('mode') === 'screensaver' ||
-    new URLSearchParams(window.location.search).get('hideControls') === 'true'
-  );
+  const [isExtensionScreensaver, setIsExtensionScreensaver] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const p = new URLSearchParams(window.location.search);
+    return p.get('mode') === 'screensaver' || p.get('hideControls') === 'true';
+  });
 
   // Sync settings with chrome.storage if running inside Chrome Extension
   useEffect(() => {
@@ -169,6 +171,19 @@ export function App() {
     } catch {
       // ignore
     }
+    // If running in a regular web browser tab where window.close() is blocked,
+    // gracefully exit screensaver mode so the user is not permanently trapped.
+    if (!chromeObj?.runtime?.id) {
+      setIsExtensionScreensaver(false);
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('mode');
+        url.searchParams.delete('hideControls');
+        window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
+      } catch {
+        // ignore
+      }
+    }
   }, []);
 
   // Extension screensaver: Escape key in ANY state MUST close the screensaver immediately
@@ -241,13 +256,9 @@ export function App() {
 
       // Escape button: leave fullscreen in web version, or close settings modal
       if (e.key === 'Escape' || e.code === 'Escape' || e.keyCode === 27) {
-        if (document.fullscreenElement) {
+        if (isFullscreenActive()) {
           e.preventDefault();
-          if (document.exitFullscreen) {
-            document.exitFullscreen().catch(() => {});
-          } else if ((document as unknown as { webkitExitFullscreen?: () => void }).webkitExitFullscreen) {
-            (document as unknown as { webkitExitFullscreen: () => void }).webkitExitFullscreen();
-          }
+          exitFullscreenSafe();
           return;
         }
 
@@ -265,19 +276,7 @@ export function App() {
       } else if (e.key === 'f' || e.key === 'F') {
         e.preventDefault();
         // Toggle fullscreen
-        if (!document.fullscreenElement) {
-          if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen().catch(() => {});
-          } else if ((document.documentElement as unknown as { webkitRequestFullscreen?: () => Promise<void> }).webkitRequestFullscreen) {
-            (document.documentElement as unknown as { webkitRequestFullscreen: () => Promise<void> }).webkitRequestFullscreen().catch(() => {});
-          }
-        } else {
-          if (document.exitFullscreen) {
-            document.exitFullscreen().catch(() => {});
-          } else if ((document as unknown as { webkitExitFullscreen?: () => Promise<void> }).webkitExitFullscreen) {
-            (document as unknown as { webkitExitFullscreen: () => Promise<void> }).webkitExitFullscreen().catch(() => {});
-          }
-        }
+        toggleFullscreenSafe();
       } else if (e.key === 's' || e.key === 'S') {
         e.preventDefault();
         setIsSettingsOpen((prev) => !prev);

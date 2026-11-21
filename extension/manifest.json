@@ -7,7 +7,8 @@
     "idle",
     "storage",
     "power",
-    "tabs"
+    "tabs",
+    "alarms"
   ],
   "action": {
     "default_popup": "popup.html",

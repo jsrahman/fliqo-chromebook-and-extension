@@ -6,12 +6,18 @@ const EXT_CONFIG_KEY = 'fliqlo_extension_config_v1';
 
 let screensaverWindowId = null;
 let previousFocusedWindowId = null;
+let screensaverTimer = null;
+let currentEndTime = null;
 
 const DEFAULT_EXT_CONFIG = {
   idleTimeoutMinutes: 5,
   autoLaunchEnabled: true,
   keepAwake: true,
   exitOnActivity: true,
+  enableDurationLimit: false,
+  durationMode: 'duration', // 'duration' | 'until'
+  durationMinutes: 30, // Default 30 min duration
+  untilTime: '', // "HH:MM" e.g. "17:00"
   excludedSites: [
     { domain: 'youtube.com', mode: 'playing' },
     { domain: 'netflix.com', mode: 'playing' },
@@ -124,6 +130,58 @@ chrome.idle.onStateChanged.addListener(async (newState) => {
   }
 });
 
+// Schedule screensaver auto-close based on duration setting
+function scheduleAutoClose(config) {
+  clearAutoCloseTimer();
+
+  if (!config.enableDurationLimit) {
+    return;
+  }
+
+  let ms = 0;
+  if (config.durationMode === 'until' && config.untilTime) {
+    const parts = config.untilTime.split(':');
+    if (parts.length === 2) {
+      const now = new Date();
+      const target = new Date();
+      target.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+      if (target.getTime() <= now.getTime()) {
+        target.setDate(target.getDate() + 1);
+      }
+      ms = target.getTime() - now.getTime();
+    }
+  } else if (config.durationMinutes && config.durationMinutes > 0) {
+    ms = config.durationMinutes * 60 * 1000;
+  }
+
+  if (ms > 0) {
+    currentEndTime = Date.now() + ms;
+    chrome.storage.local.set({ screensaverEndTime: currentEndTime });
+    screensaverTimer = setTimeout(() => {
+      console.log('[Fliqlo] Screensaver display duration reached. Auto-closing.');
+      closeScreensaver();
+    }, ms);
+
+    chrome.alarms.create('screensaver_close_alarm', { when: currentEndTime });
+  }
+}
+
+function clearAutoCloseTimer() {
+  if (screensaverTimer) {
+    clearTimeout(screensaverTimer);
+    screensaverTimer = null;
+  }
+  currentEndTime = null;
+  chrome.alarms.clear('screensaver_close_alarm');
+  chrome.storage.local.remove(['screensaverEndTime']);
+}
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'screensaver_close_alarm') {
+    closeScreensaver();
+  }
+});
+
 // Launch fullscreen screensaver
 async function launchScreensaver(config) {
   try {
@@ -155,6 +213,9 @@ async function launchScreensaver(config) {
     if (config.keepAwake) {
       chrome.power.requestKeepAwake('display');
     }
+
+    // Schedule auto-close duration timer
+    scheduleAutoClose(config);
   } catch (err) {
     console.warn('Failed to launch screensaver window:', err);
   }
@@ -162,6 +223,7 @@ async function launchScreensaver(config) {
 
 // Close screensaver window
 async function closeScreensaver() {
+  clearAutoCloseTimer();
   if (screensaverWindowId === null) return;
   const winId = screensaverWindowId;
   screensaverWindowId = null;
@@ -211,10 +273,41 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     closeScreensaver();
     sendResponse({ status: 'ok' });
     return true;
+  } else if (message.action === 'extend_duration') {
+    const addMinutes = message.additionalMinutes || 15;
+    if (currentEndTime) {
+      currentEndTime += addMinutes * 60 * 1000;
+      clearTimeout(screensaverTimer);
+      const remainingMs = currentEndTime - Date.now();
+      if (remainingMs > 0) {
+        screensaverTimer = setTimeout(() => {
+          closeScreensaver();
+        }, remainingMs);
+        chrome.alarms.create('screensaver_close_alarm', { when: currentEndTime });
+        chrome.storage.local.set({ screensaverEndTime: currentEndTime });
+      }
+    }
+    sendResponse({ status: 'ok', currentEndTime });
+    return true;
+  } else if (message.action === 'get_screensaver_status') {
+    sendResponse({
+      isOpen: screensaverWindowId !== null,
+      endTime: currentEndTime,
+    });
+    return true;
   } else if (message.action === 'update_idle_timeout') {
     chrome.storage.sync.get([EXT_CONFIG_KEY], (res) => {
       const config = res[EXT_CONFIG_KEY] || DEFAULT_EXT_CONFIG;
       updateIdleDetection(config);
+      sendResponse({ status: 'ok' });
+    });
+    return true;
+  } else if (message.action === 'update_duration_config') {
+    chrome.storage.sync.get([EXT_CONFIG_KEY], (res) => {
+      const config = res[EXT_CONFIG_KEY] || DEFAULT_EXT_CONFIG;
+      if (screensaverWindowId !== null) {
+        scheduleAutoClose(config);
+      }
       sendResponse({ status: 'ok' });
     });
     return true;

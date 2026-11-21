@@ -6,8 +6,8 @@
 }
 
 body {
-  width: 320px;
-  background-color: #141416;
+  width: 350px;
+  background-color: #121214;
   color: #f0f0f0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow-x: hidden;
@@ -15,10 +15,10 @@ body {
 }
 
 .popup-container {
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 /* Header */
@@ -26,7 +26,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 12px;
+  padding-bottom: 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -39,7 +39,7 @@ body {
 .logo-badge {
   width: 24px;
   height: 24px;
-  background: #222224;
+  background: #202024;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 5px;
   display: flex;
@@ -65,11 +65,52 @@ body {
   text-transform: uppercase;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-git-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #dddddd;
+  padding: 4px 8px;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-git-badge:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.git-star-sym {
+  color: #ffcc00;
+  font-size: 11px;
+}
+
+.git-star-val {
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  color: #ffcc00;
+  font-weight: 700;
+}
+
 .btn-launch {
   background: #ffffff;
   color: #111111;
   border: none;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 700;
   padding: 5px 10px;
   border-radius: 6px;
@@ -82,18 +123,76 @@ body {
   transform: translateY(-1px);
 }
 
-/* Section styling */
-.pref-section {
+/* Tabs Navigation Bar (User reference design) */
+.tabs-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1c1d22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8b8c94;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+  outline: none;
+}
+
+.tab-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.tab-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+}
+
+.tab-icon {
+  width: 17px;
+  height: 17px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* Tab panes */
+.tab-pane {
+  display: none;
+}
+
+.tab-pane.active {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  animation: tabFadeIn 0.15s ease-out;
 }
 
-.pref-section:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .section-title {
@@ -122,7 +221,7 @@ body {
 }
 
 .pref-title {
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   color: #eeeeee;
 }
@@ -133,13 +232,175 @@ body {
 }
 
 .pref-select {
-  background: #252528;
+  background: #222226;
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #ffffff;
   padding: 4px 8px;
   border-radius: 6px;
-  font-size: 11.5px;
+  font-size: 11px;
   outline: none;
+}
+
+/* Duration Box & Chips (Screenshot UI) */
+.duration-box {
+  background: #18191d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.duration-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.quick-chips {
+  display: flex;
+  gap: 6px;
+}
+
+.quick-chip {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  color: #e0e0e0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.quick-chip:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.quick-chip:active {
+  transform: scale(0.96);
+}
+
+.duration-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.dur-chip {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  color: #d0d0d0;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 7px 0;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.dur-chip:hover {
+  background: rgba(255, 255, 255, 0.13);
+  color: #ffffff;
+}
+
+.dur-chip.active {
+  background: #007aff !important;
+  color: #ffffff !important;
+  border-color: #007aff !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.4);
+}
+
+.until-picker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.until-label {
+  font-size: 11px;
+  color: #bbb;
+}
+
+.until-time-input {
+  background: #222226;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 6px;
+  outline: none;
+}
+
+.chips-hint {
+  font-size: 10px;
+  color: #77777d;
+  font-style: italic;
+  line-height: 1.3;
+}
+
+/* Active Screensaver Status Banner */
+.screensaver-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(37, 99, 235, 0.15);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.banner-pulse {
+  width: 7px;
+  height: 7px;
+  background: #34c759;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #34c759;
+  margin-right: 6px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+.banner-text {
+  font-size: 11px;
+  color: #93c5fd;
+  font-weight: 600;
+  flex: 1;
+}
+
+.btn-banner-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-banner-close:hover {
+  background: rgba(255, 59, 48, 0.3);
+  border-color: #ff3b30;
 }
 
 /* Segmented control */
@@ -205,13 +466,13 @@ body {
 }
 
 input:checked + .slider {
-  background-color: #ffffff;
-  border-color: #ffffff;
+  background-color: #007aff;
+  border-color: #007aff;
 }
 
 input:checked + .slider:before {
   transform: translateX(16px);
-  background-color: #121214;
+  background-color: #ffffff;
 }
 
 /* Sliders */
@@ -269,6 +530,7 @@ input[type="range"]::-webkit-slider-thumb {
   padding: 3px 8px;
   border-radius: 4px;
   cursor: pointer;
+  outline: none;
 }
 
 .btn-subtle:hover {
@@ -376,7 +638,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .site-input {
   flex: 1;
-  background: #141416;
+  background: #18181c;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 6px;
   color: #f0f0f0;
@@ -414,7 +676,7 @@ input[type="range"]::-webkit-slider-thumb {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 170px;
+  max-height: 180px;
   overflow-y: auto;
 }
 
@@ -483,4 +745,121 @@ input[type="range"]::-webkit-slider-thumb {
   font-style: italic;
   text-align: center;
   padding: 8px 4px;
+}
+
+/* Shortcuts & About box */
+.btn-launch-large {
+  background: #ffffff;
+  color: #111;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.15s ease;
+}
+
+.btn-launch-large:hover {
+  background: #e0e0e0;
+  transform: translateY(-1px);
+}
+
+.shortcuts-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shortcuts-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.shortcut-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #ccc;
+}
+
+.shortcut-item kbd {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: inherit;
+  font-size: 10px;
+  color: #fff;
+}
+
+/* GitHub Repo Promo Card */
+.git-repo-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  text-decoration: none;
+  color: #e0e0e0;
+  transition: all 0.18s ease;
+}
+
+.git-repo-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.git-card-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.git-card-left svg {
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.git-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.git-repo-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.git-repo-sub {
+  font-size: 9.5px;
+  color: #888890;
+}
+
+.git-card-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255, 204, 0, 0.15);
+  border: 1px solid rgba(255, 204, 0, 0.3);
+  border-radius: 12px;
+  padding: 3px 8px;
+  color: #ffcc00;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
