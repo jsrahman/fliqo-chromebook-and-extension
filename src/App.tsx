@@ -187,26 +187,9 @@ export function App() {
     window.addEventListener('keydown', handleEscPress, true);
     window.addEventListener('keyup', handleEscPress, true);
 
-    // In extension mode, always enforce native full screen
-    const enforceFullscreen = () => {
-      if (!document.fullscreenElement) {
-        if (document.documentElement.requestFullscreen) {
-          document.documentElement.requestFullscreen().catch(() => {});
-        } else if ((document.documentElement as unknown as { webkitRequestFullscreen?: () => Promise<void> }).webkitRequestFullscreen) {
-          (document.documentElement as unknown as { webkitRequestFullscreen: () => Promise<void> }).webkitRequestFullscreen().catch(() => {});
-        }
-      }
-    };
-
-    enforceFullscreen();
-    window.addEventListener('focus', enforceFullscreen);
-    document.addEventListener('click', enforceFullscreen);
-
     return () => {
       window.removeEventListener('keydown', handleEscPress, true);
       window.removeEventListener('keyup', handleEscPress, true);
-      window.removeEventListener('focus', enforceFullscreen);
-      document.removeEventListener('click', enforceFullscreen);
     };
   }, [isExtensionScreensaver, closeExtensionScreensaver]);
 
@@ -283,9 +266,17 @@ export function App() {
         e.preventDefault();
         // Toggle fullscreen
         if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen?.().catch(() => {});
+          if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          } else if ((document.documentElement as unknown as { webkitRequestFullscreen?: () => Promise<void> }).webkitRequestFullscreen) {
+            (document.documentElement as unknown as { webkitRequestFullscreen: () => Promise<void> }).webkitRequestFullscreen().catch(() => {});
+          }
         } else {
-          document.exitFullscreen?.().catch(() => {});
+          if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+          } else if ((document as unknown as { webkitExitFullscreen?: () => Promise<void> }).webkitExitFullscreen) {
+            (document as unknown as { webkitExitFullscreen: () => Promise<void> }).webkitExitFullscreen().catch(() => {});
+          }
         }
       } else if (e.key === 's' || e.key === 'S') {
         e.preventDefault();
