@@ -63,6 +63,26 @@
         </div>
       </div>
 
+      <!-- Excluded Websites Section -->
+      <div class="pref-section">
+        <div class="section-header-split">
+          <span class="section-title">Excluded Websites</span>
+          <button type="button" id="btnExcludeCurrentTab" class="btn-subtle" title="Exclude the currently active browser tab">
+            + Current Tab
+          </button>
+        </div>
+        <p class="pref-desc" style="margin: 2px 0 10px 0;">
+          Don't run clock if an excluded site is active:
+        </p>
+
+        <div class="add-site-row">
+          <input type="text" id="txtNewDomain" class="site-input" placeholder="e.g. twitch.tv, zoom.us" />
+          <button type="button" id="btnAddDomain" class="btn-add-site">+ Add</button>
+        </div>
+
+        <div id="excludedSitesList" class="excluded-sites-list"></div>
+      </div>
+
       <!-- Time & Display Section -->
       <div class="pref-section">
         <span class="section-title">Time & Display</span>
@@ -148,8 +168,16 @@
         <span class="section-title">Typography</span>
         <div class="font-selector">
           <button type="button" class="font-btn active" data-font="fliqlo">
-            <span class="font-btn-name">Fliqlo Original</span>
-            <span class="font-btn-tag">Original</span>
+            <span class="font-btn-name">Fliqlo (FLIP Clock)</span>
+            <span class="font-btn-tag">Fliqlo</span>
+          </button>
+          <button type="button" class="font-btn" data-font="flip-white">
+            <span class="font-btn-name">FLIP Clock White</span>
+            <span class="font-btn-tag">Outline</span>
+          </button>
+          <button type="button" class="font-btn" data-font="fliqlo-mac">
+            <span class="font-btn-name">Fliqlo Mac OS</span>
+            <span class="font-btn-tag">Mac OS</span>
           </button>
           <button type="button" class="font-btn" data-font="barlow-condensed">
             <span class="font-btn-name">Barlow Condensed</span>
@@ -160,6 +188,32 @@
           <button type="button" class="font-btn" data-font="ubuntu">
             <span class="font-btn-name">Ubuntu</span>
           </button>
+        </div>
+
+        <!-- Font Dimensions: Height & Width -->
+        <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 10px;">
+          <div class="section-header-split">
+            <span class="pref-desc" style="font-weight: 600; color: #bbb;">Font Size & Dimensions</span>
+            <button type="button" id="btnResetFontSize" class="btn-subtle">Reset</button>
+          </div>
+
+          <!-- Font Height (Vertical Size) -->
+          <div class="slider-row">
+            <div class="slider-labels">
+              <span class="slider-title">Font Height (Vertical)</span>
+              <span id="lblFontScaleY" class="slider-val">100%</span>
+            </div>
+            <input type="range" id="rngFontScaleY" min="0.4" max="2.5" step="0.05" value="1.0" />
+          </div>
+
+          <!-- Font Width (Horizontal Size) -->
+          <div class="slider-row">
+            <div class="slider-labels">
+              <span class="slider-title">Font Width (Horizontal)</span>
+              <span id="lblFontScaleX" class="slider-val">100%</span>
+            </div>
+            <input type="range" id="rngFontScaleX" min="0.4" max="2.5" step="0.05" value="1.0" />
+          </div>
         </div>
       </div>
 

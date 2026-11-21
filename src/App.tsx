@@ -129,7 +129,60 @@ export function App() {
     };
   }, [handleUserActivity]);
 
-  // Screensaver activity listener: wake Chromebook and close screensaver on mouse movement or keypress
+  // Helper to reliably close the extension screensaver window and restore prior workspace
+  const closeExtensionScreensaver = useCallback(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const chromeObj = (window as unknown as { chrome?: any }).chrome;
+    if (chromeObj?.runtime?.sendMessage) {
+      chromeObj.runtime.sendMessage({ action: 'close_screensaver' });
+    }
+    try {
+      window.close();
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // Extension screensaver: Escape key in ANY state MUST close the screensaver immediately
+  useEffect(() => {
+    if (!isExtensionScreensaver) return;
+
+    const handleEscPress = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.code === 'Escape' || e.keyCode === 27) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeExtensionScreensaver();
+      }
+    };
+
+    // Use capture phase on both keydown and keyup so it cannot be intercepted or cancelled
+    window.addEventListener('keydown', handleEscPress, true);
+    window.addEventListener('keyup', handleEscPress, true);
+
+    // In extension mode, always enforce native full screen
+    const enforceFullscreen = () => {
+      if (!document.fullscreenElement) {
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else if ((document.documentElement as unknown as { webkitRequestFullscreen?: () => Promise<void> }).webkitRequestFullscreen) {
+          (document.documentElement as unknown as { webkitRequestFullscreen: () => Promise<void> }).webkitRequestFullscreen().catch(() => {});
+        }
+      }
+    };
+
+    enforceFullscreen();
+    window.addEventListener('focus', enforceFullscreen);
+    document.addEventListener('click', enforceFullscreen);
+
+    return () => {
+      window.removeEventListener('keydown', handleEscPress, true);
+      window.removeEventListener('keyup', handleEscPress, true);
+      window.removeEventListener('focus', enforceFullscreen);
+      document.removeEventListener('click', enforceFullscreen);
+    };
+  }, [isExtensionScreensaver, closeExtensionScreensaver]);
+
+  // Screensaver activity listener: wake Chromebook/Mac and close screensaver on mouse movement or keypress
   useEffect(() => {
     if (!isExtensionScreensaver) return;
 
@@ -137,7 +190,13 @@ export function App() {
     const startTime = Date.now();
 
     const handleScreensaverActivity = (e: Event) => {
-      // Grace period of 800ms to ignore initial window opening events
+      // Escape key always closes immediately with zero delay
+      if ((e as KeyboardEvent).key === 'Escape' || (e as KeyboardEvent).code === 'Escape') {
+        closeExtensionScreensaver();
+        return;
+      }
+
+      // Grace period of 800ms for ambient mouse moves
       if (Date.now() - startTime < 800) return;
 
       if (e.type === 'mousemove') {
@@ -145,11 +204,7 @@ export function App() {
         if (moveCount < 6) return;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const chromeObj = (window as unknown as { chrome?: any }).chrome;
-      if (chromeObj?.runtime?.sendMessage) {
-        chromeObj.runtime.sendMessage({ action: 'close_screensaver' });
-      }
+      closeExtensionScreensaver();
     };
 
     window.addEventListener('mousemove', handleScreensaverActivity);
@@ -163,7 +218,7 @@ export function App() {
       window.removeEventListener('mousedown', handleScreensaverActivity);
       window.removeEventListener('touchstart', handleScreensaverActivity);
     };
-  }, [isExtensionScreensaver]);
+  }, [isExtensionScreensaver, closeExtensionScreensaver]);
 
   // Keyboard shortcuts (for web app mode)
   useEffect(() => {
@@ -173,7 +228,24 @@ export function App() {
       // If typing in an input, don't trigger shortcuts
       if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
 
-      if (e.key === 'f' || e.key === 'F') {
+      // Escape button: leave fullscreen in web version, or close settings modal
+      if (e.key === 'Escape' || e.code === 'Escape' || e.keyCode === 27) {
+        if (document.fullscreenElement) {
+          e.preventDefault();
+          if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+          } else if ((document as unknown as { webkitExitFullscreen?: () => void }).webkitExitFullscreen) {
+            (document as unknown as { webkitExitFullscreen: () => void }).webkitExitFullscreen();
+          }
+          return;
+        }
+
+        if (isSettingsOpen) {
+          e.preventDefault();
+          setIsSettingsOpen(false);
+          return;
+        }
+      } else if (e.key === 'f' || e.key === 'F') {
         e.preventDefault();
         // Toggle fullscreen
         if (!document.fullscreenElement) {
@@ -194,11 +266,13 @@ export function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isExtensionScreensaver, settings.format, handleUpdateSettings]);
+  }, [isExtensionScreensaver, isSettingsOpen, settings.format, handleUpdateSettings]);
 
   return (
     <div
       className={`fliqlo-app theme-${settings.backgroundTheme} text-${settings.textColorTheme} font-${settings.fontFamily} ${
+        isExtensionScreensaver ? 'is-screensaver' : ''
+      } ${
         isCursorHidden ? 'hide-cursor' : ''
       }`}
       onMouseMove={handleUserActivity}

@@ -12,7 +12,75 @@ const DEFAULT_EXT_CONFIG = {
   autoLaunchEnabled: true,
   keepAwake: true,
   exitOnActivity: true,
+  excludedSites: [
+    { domain: 'youtube.com', mode: 'playing' },
+    { domain: 'netflix.com', mode: 'playing' },
+  ],
 };
+
+// Check if active tab or audible media matches an excluded site rule
+async function shouldBlockScreensaver(config) {
+  const excludedSites = config.excludedSites || [];
+  if (!Array.isArray(excludedSites) || excludedSites.length === 0) {
+    return false;
+  }
+
+  try {
+    // 1. Get active tab in last focused window
+    const activeTabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    const activeTab = activeTabs && activeTabs[0];
+
+    // 2. Also check all tabs that are playing audio/video
+    const audibleTabs = await chrome.tabs.query({ audible: true });
+
+    for (const site of excludedSites) {
+      if (!site || !site.domain) continue;
+      const targetDomain = site.domain.toLowerCase().trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+      if (!targetDomain) continue;
+      const mode = site.mode || 'always'; // 'always' | 'playing'
+
+      // Check active tab
+      if (activeTab && activeTab.url) {
+        try {
+          const tabHostname = new URL(activeTab.url).hostname.toLowerCase();
+          const matches = tabHostname === targetDomain || tabHostname.endsWith('.' + targetDomain);
+          if (matches) {
+            if (mode === 'always') {
+              console.log(`[Fliqlo] Screensaver blocked: active tab on ${tabHostname} is excluded (always)`);
+              return true;
+            }
+            if (mode === 'playing' && activeTab.audible) {
+              console.log(`[Fliqlo] Screensaver blocked: active tab on ${tabHostname} is playing media`);
+              return true;
+            }
+          }
+        } catch {
+          // ignore URL parsing errors on chrome:// pages etc.
+        }
+      }
+
+      // If mode is 'playing', check if any audible tab belongs to this domain
+      if (mode === 'playing' && audibleTabs && audibleTabs.length > 0) {
+        for (const audTab of audibleTabs) {
+          if (!audTab.url) continue;
+          try {
+            const audHostname = new URL(audTab.url).hostname.toLowerCase();
+            if (audHostname === targetDomain || audHostname.endsWith('.' + targetDomain)) {
+              console.log(`[Fliqlo] Screensaver blocked: media is playing on ${audHostname}`);
+              return true;
+            }
+          } catch {
+            // ignore
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[Fliqlo] Error checking excluded sites:', err);
+  }
+
+  return false;
+}
 
 // Initialize idle detection on install or startup
 chrome.runtime.onInstalled.addListener(() => {
@@ -42,6 +110,11 @@ chrome.idle.onStateChanged.addListener(async (newState) => {
 
   if (newState === 'idle' || newState === 'locked') {
     if (config.autoLaunchEnabled && screensaverWindowId === null) {
+      const isBlocked = await shouldBlockScreensaver(config);
+      if (isBlocked) {
+        console.log('[Fliqlo] Screensaver blocked by excluded website rule');
+        return;
+      }
       launchScreensaver(config);
     }
   } else if (newState === 'active') {
@@ -68,6 +141,17 @@ async function launchScreensaver(config) {
 
     screensaverWindowId = win.id;
 
+    // Enforce that the window is always in fullscreen mode
+    setTimeout(async () => {
+      try {
+        if (screensaverWindowId) {
+          await chrome.windows.update(screensaverWindowId, { state: 'fullscreen', focused: true });
+        }
+      } catch {
+        // ignore
+      }
+    }, 150);
+
     if (config.keepAwake) {
       chrome.power.requestKeepAwake('display');
     }
@@ -79,16 +163,18 @@ async function launchScreensaver(config) {
 // Close screensaver window
 async function closeScreensaver() {
   if (screensaverWindowId === null) return;
+  const winId = screensaverWindowId;
+  screensaverWindowId = null;
   try {
-    await chrome.windows.remove(screensaverWindowId);
+    await chrome.windows.remove(winId);
   } catch {
     // window might already be closed by user
   } finally {
-    screensaverWindowId = null;
     chrome.power.releaseKeepAwake();
     if (previousFocusedWindowId !== null) {
-      chrome.windows.update(previousFocusedWindowId, { focused: true }).catch(() => {});
+      const prevId = previousFocusedWindowId;
       previousFocusedWindowId = null;
+      chrome.windows.update(prevId, { focused: true }).catch(() => {});
     }
   }
 }
@@ -98,6 +184,17 @@ chrome.windows.onRemoved.addListener((windowId) => {
   if (windowId === screensaverWindowId) {
     screensaverWindowId = null;
     chrome.power.releaseKeepAwake();
+  }
+});
+
+// Ensure screensaver window is ALWAYS fullscreen in the extension
+chrome.windows.onBoundsChanged.addListener(async (win) => {
+  if (win.id === screensaverWindowId && win.state !== 'fullscreen') {
+    try {
+      await chrome.windows.update(screensaverWindowId, { state: 'fullscreen', focused: true });
+    } catch {
+      // ignore
+    }
   }
 });
 

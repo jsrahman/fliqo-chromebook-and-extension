@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Maximize, Minimize } from 'lucide-react';
+import { Settings, Maximize, Minimize, Puzzle, Check } from 'lucide-react';
 
 interface BottomBarProps {
   onOpenSettings: () => void;
@@ -11,6 +11,7 @@ export const BottomBar: React.FC<BottomBarProps> = ({
   isVisible,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isDownloaded, setIsDownloaded] = useState(false);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -46,15 +47,40 @@ export const BottomBar: React.FC<BottomBarProps> = ({
     }
   };
 
+  const handleDownloadClick = () => {
+    setIsDownloaded(true);
+    setTimeout(() => {
+      setIsDownloaded(false);
+    }, 3000);
+  };
+
+  const baseUrl = import.meta.env.BASE_URL || './';
+  const extensionDownloadUrl = baseUrl.endsWith('/')
+    ? `${baseUrl}fliqlo-extension.zip`
+    : `${baseUrl}/fliqlo-extension.zip`;
+
   return (
     <footer className={`bottom-bar ${isVisible ? '' : 'hidden'}`}>
       <div className="bottom-hints">
         <span><kbd>S</kbd> Settings</span>
-        <span><kbd>F</kbd> Fullscreen</span>
+        <span><kbd>F</kbd> / <kbd>Esc</kbd> Fullscreen</span>
         <span><kbd>Space</kbd> 12/24h</span>
       </div>
 
       <div className="bottom-buttons-container">
+        {/* Button: Extension Download */}
+        <a
+          href={extensionDownloadUrl}
+          download="fliqlo-extension.zip"
+          onClick={handleDownloadClick}
+          className="action-button extension-button"
+          title="Download Chrome Extension Screensaver (.zip)"
+          aria-label="Download Chrome Extension Screensaver"
+        >
+          {isDownloaded ? <Check size={17} /> : <Puzzle size={17} />}
+          <span>{isDownloaded ? 'Downloaded!' : 'Extension'}</span>
+        </a>
+
         {/* Button 1: Settings */}
         <button
           className="action-button"

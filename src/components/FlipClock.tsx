@@ -10,20 +10,48 @@ export const FlipClock: React.FC<FlipClockProps> = ({ settings }) => {
   const [time, setTime] = useState(() => new Date());
 
   useEffect(() => {
-    // Keep exact synchronization with real system clock
-    const updateTime = () => setTime(new Date());
+    let animFrameId: number | null = null;
+    let fallbackInterval: number | null = null;
+    let lastSecond = -1;
 
-    // Compute delay until the start of the next exact second
-    const now = Date.now();
-    const delay = 1000 - (now % 1000);
+    // Resilient clock synchronizer - never drifts or gets stuck
+    const checkTime = () => {
+      const now = new Date();
+      const currentSecond = now.getSeconds();
+      if (currentSecond !== lastSecond) {
+        lastSecond = currentSecond;
+        setTime(now);
+      }
+    };
 
-    const initialTimeout = window.setTimeout(() => {
-      updateTime();
-      const interval = window.setInterval(updateTime, 1000);
-      return () => window.clearInterval(interval);
-    }, delay);
+    // 1. High-precision requestAnimationFrame loop for smooth 60fps/120fps sync
+    const loop = () => {
+      checkTime();
+      animFrameId = requestAnimationFrame(loop);
+    };
+    animFrameId = requestAnimationFrame(loop);
 
-    return () => window.clearTimeout(initialTimeout);
+    // 2. Safety heartbeat interval (every 300ms) to ensure continuous ticking
+    // even if the browser/OS throttles or pauses requestAnimationFrame in background
+    fallbackInterval = window.setInterval(checkTime, 300);
+
+    // 3. Instant recovery on tab visibility change, system wake, or window focus
+    const handleWake = () => {
+      lastSecond = -1;
+      setTime(new Date());
+    };
+
+    document.addEventListener('visibilitychange', handleWake);
+    window.addEventListener('focus', handleWake);
+    window.addEventListener('pageshow', handleWake);
+
+    return () => {
+      if (animFrameId !== null) cancelAnimationFrame(animFrameId);
+      if (fallbackInterval !== null) window.clearInterval(fallbackInterval);
+      document.removeEventListener('visibilitychange', handleWake);
+      window.removeEventListener('focus', handleWake);
+      window.removeEventListener('pageshow', handleWake);
+    };
   }, []);
 
   const rawHours = time.getHours();
@@ -48,6 +76,8 @@ export const FlipClock: React.FC<FlipClockProps> = ({ settings }) => {
   const overallScale = settings.scale ?? 1.0;
   const scaleX = settings.scaleX ?? 1.0;
   const scaleY = settings.scaleY ?? 1.0;
+  const fontScaleX = settings.fontScaleX ?? 1.0;
+  const fontScaleY = settings.fontScaleY ?? 1.0;
   const totalScaleX = Number((overallScale * scaleX).toFixed(3));
   const totalScaleY = Number((overallScale * scaleY).toFixed(3));
 
@@ -56,6 +86,8 @@ export const FlipClock: React.FC<FlipClockProps> = ({ settings }) => {
       className="clock-container"
       style={{
         transform: `scale(${totalScaleX}, ${totalScaleY})`,
+        ['--font-scale-x' as string]: String(fontScaleX),
+        ['--font-scale-y' as string]: String(fontScaleY),
       }}
     >
       <div className="flip-clock">

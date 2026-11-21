@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { X, Volume2, RotateCcw } from 'lucide-react';
+import { X, Volume2, RotateCcw, Download } from 'lucide-react';
 import {
   ClockSettings,
   BackgroundTheme,
@@ -40,12 +40,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const currentScale = settings.scale ?? 1.0;
   const currentScaleX = settings.scaleX ?? 1.0;
   const currentScaleY = settings.scaleY ?? 1.0;
+  const currentFontScaleX = settings.fontScaleX ?? 1.0;
+  const currentFontScaleY = settings.fontScaleY ?? 1.0;
 
   const handleResetScale = () => {
     onUpdateSettings({
       scale: 1.0,
       scaleX: 1.0,
       scaleY: 1.0,
+    });
+  };
+
+  const handleResetFontSize = () => {
+    onUpdateSettings({
+      fontScaleX: 1.0,
+      fontScaleY: 1.0,
     });
   };
 
@@ -238,9 +247,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
-          {/* Section 3: Typography */}
+          {/* Section 3: Typography & Font Size */}
           <div className="section-group">
-            <span className="section-heading">Typography</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span className="section-heading">Typography & Font Size</span>
+              {(currentFontScaleX !== 1.0 || currentFontScaleY !== 1.0) && (
+                <button
+                  type="button"
+                  className="btn-subtle"
+                  onClick={handleResetFontSize}
+                  title="Reset font dimensions to 100%"
+                  style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <RotateCcw size={11} /> Reset Font Size
+                </button>
+              )}
+            </div>
+
             <div className="font-grid">
               {AVAILABLE_FONTS.map((font) => {
                 const isSelected = settings.fontFamily === font.id;
@@ -252,7 +275,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     type="button"
                     aria-pressed={isSelected}
                   >
-                    {font.id === 'fliqlo' && <span className="font-badge">Original</span>}
+                    {font.badge && <span className="font-badge">{font.badge}</span>}
                     <div
                       className="font-preview"
                       style={{ fontFamily: font.fontFamily }}
@@ -264,6 +287,46 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </button>
                 );
               })}
+            </div>
+
+            {/* Font Height (Vertical Size) */}
+            <div className="setting-row" style={{ marginTop: '12px' }}>
+              <div className="setting-label">
+                <span className="setting-title">Font Height (Vertical Size)</span>
+                <span className="setting-desc">Taller or more compact numerals (40% – 250%)</span>
+              </div>
+              <div className="range-slider-wrapper">
+                <input
+                  type="range"
+                  className="range-slider"
+                  min="0.4"
+                  max="2.5"
+                  step="0.05"
+                  value={currentFontScaleY}
+                  onChange={(e) => onUpdateSettings({ fontScaleY: parseFloat(e.target.value) })}
+                />
+                <span className="range-value">{Math.round(currentFontScaleY * 100)}%</span>
+              </div>
+            </div>
+
+            {/* Font Width (Horizontal Size) */}
+            <div className="setting-row">
+              <div className="setting-label">
+                <span className="setting-title">Font Width (Horizontal Size)</span>
+                <span className="setting-desc">Wider or more condensed numerals (40% – 250%)</span>
+              </div>
+              <div className="range-slider-wrapper">
+                <input
+                  type="range"
+                  className="range-slider"
+                  min="0.4"
+                  max="2.5"
+                  step="0.05"
+                  value={currentFontScaleX}
+                  onChange={(e) => onUpdateSettings({ fontScaleX: parseFloat(e.target.value) })}
+                />
+                <span className="range-value">{Math.round(currentFontScaleX * 100)}%</span>
+              </div>
             </div>
           </div>
 
@@ -399,6 +462,42 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 />
                 <span className="slider-switch" />
               </label>
+            </div>
+          </div>
+
+          {/* Section 6: Screensaver Extension */}
+          <div className="section-group">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span className="section-heading">Screensaver Extension</span>
+              <a
+                href={`${(import.meta.env.BASE_URL || './').endsWith('/') ? (import.meta.env.BASE_URL || './') : `${import.meta.env.BASE_URL || './'}/`}fliqlo-extension.zip`}
+                download="fliqlo-extension.zip"
+                className="btn-subtle"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+                title="Download Extension ZIP"
+              >
+                <Download size={11} /> Download .zip
+              </a>
+            </div>
+            <div className="setting-desc" style={{ marginTop: '4px', fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)' }}>
+              Authentic split-flap screensaver for Chrome & Chromebook with system idle auto-launch.
+            </div>
+            <div style={{
+              marginTop: '10px',
+              padding: '10px 12px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              borderRadius: '8px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              fontSize: '11px',
+              color: 'rgba(255, 255, 255, 0.65)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '5px',
+              lineHeight: '1.4'
+            }}>
+              <div><strong>1.</strong> Click <strong>Download .zip</strong> to get <code>fliqlo-extension.zip</code> and extract it.</div>
+              <div><strong>2.</strong> Navigate to <code>chrome://extensions</code> in Chrome and enable <strong>Developer mode</strong> (top right).</div>
+              <div><strong>3.</strong> Click <strong>Load unpacked</strong> and select the unzipped <code>extension</code> folder.</div>
             </div>
           </div>
 

@@ -366,3 +366,121 @@ input[type="range"]::-webkit-slider-thumb {
   border-color: rgba(255, 255, 255, 0.3);
   color: #ffffff;
 }
+
+/* Excluded Websites UI */
+.add-site-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.site-input {
+  flex: 1;
+  background: #141416;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #f0f0f0;
+  font-size: 11px;
+  padding: 6px 8px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.site-input:focus {
+  border-color: #3b82f6;
+}
+
+.btn-add-site {
+  background: #2a2a2e;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-add-site:hover {
+  background: #3b3b42;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.excluded-sites-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 170px;
+  overflow-y: auto;
+}
+
+.excluded-site-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  padding: 5px 8px;
+  gap: 8px;
+}
+
+.site-domain-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #e0e0e0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.site-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.site-rule-select {
+  background: #18181a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  color: #cccccc;
+  font-size: 10px;
+  padding: 3px 6px;
+  outline: none;
+  cursor: pointer;
+}
+
+.site-rule-select:focus {
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+.btn-remove-site {
+  background: transparent;
+  border: none;
+  color: #777777;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.btn-remove-site:hover {
+  color: #ff5555;
+}
+
+.empty-sites-hint {
+  font-size: 10.5px;
+  color: #666666;
+  font-style: italic;
+  text-align: center;
+  padding: 8px 4px;
+}

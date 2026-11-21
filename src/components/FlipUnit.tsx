@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { soundEffects } from './SoundEffects';
 
 interface FlipUnitProps {
@@ -29,13 +29,39 @@ export const FlipUnit: React.FC<FlipUnitProps> = ({
   const prevAmPmRef = useRef(ampm);
   const animTimeoutRef = useRef<number | null>(null);
 
+  // Complete and commit any ongoing animation cleanly
+  const finishFlip = useCallback((targetVal: string, targetAmPm?: string) => {
+    if (animTimeoutRef.current) {
+      window.clearTimeout(animTimeoutRef.current);
+      animTimeoutRef.current = null;
+    }
+    setCurrentVal(targetVal);
+    setNextVal(targetVal);
+    setCurrentAmPm(targetAmPm);
+    setNextAmPm(targetAmPm);
+    setIsFlipping(false);
+  }, []);
+
   useEffect(() => {
     if (value !== prevValueRef.current) {
+      const oldVal = prevValueRef.current;
+      prevValueRef.current = value;
+      prevAmPmRef.current = ampm;
+
+      // If document is hidden/backgrounded, skip CSS animation to prevent getting stuck
+      if (typeof document !== 'undefined' && document.hidden) {
+        finishFlip(value, ampm);
+        return;
+      }
+
+      // If an existing flip was in progress, ensure base card matches prior target
       if (animTimeoutRef.current) {
         window.clearTimeout(animTimeoutRef.current);
       }
 
+      setCurrentVal(oldVal);
       setNextVal(value);
+      setCurrentAmPm(currentAmPm);
       setNextAmPm(ampm);
       setIsFlipping(true);
       setFlipKey((k) => k + 1);
@@ -44,27 +70,36 @@ export const FlipUnit: React.FC<FlipUnitProps> = ({
         soundEffects.playFlip(soundVolume);
       }
 
-      // Animation duration is ~580ms
+      // Fallback timer: guarantees transition finishes even if animation event is interrupted
       animTimeoutRef.current = window.setTimeout(() => {
-        setCurrentVal(value);
-        setCurrentAmPm(ampm);
-        setIsFlipping(false);
-        prevValueRef.current = value;
-        prevAmPmRef.current = ampm;
+        finishFlip(value, ampm);
       }, 580);
     } else if (ampm !== prevAmPmRef.current) {
       setCurrentAmPm(ampm);
+      setNextAmPm(ampm);
       prevAmPmRef.current = ampm;
     }
-  }, [value, ampm, soundEnabled, soundVolume]);
+  }, [value, ampm, soundEnabled, soundVolume, currentAmPm, finishFlip]);
 
+  // Clean recovery on tab visibility change or window focus
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        finishFlip(value, ampm);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleVisibilityChange);
+
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
       if (animTimeoutRef.current) {
         window.clearTimeout(animTimeoutRef.current);
       }
     };
-  }, []);
+  }, [value, ampm, finishFlip]);
 
   return (
     <div className={`flip-unit ${isSeconds ? 'seconds-unit' : ''}`}>
@@ -94,7 +129,11 @@ export const FlipUnit: React.FC<FlipUnitProps> = ({
           </div>
 
           {/* Bottom Flap rotating downwards from 90deg to 0deg */}
-          <div className="card-half bottom flip-bottom" key={`bottom-${flipKey}`}>
+          <div
+            className="card-half bottom flip-bottom"
+            key={`bottom-${flipKey}`}
+            onAnimationEnd={() => finishFlip(value, ampm)}
+          >
             <span className="card-number">{nextVal}</span>
             {showAmPm && nextAmPm && (
               <span className="ampm-badge">{nextAmPm}</span>

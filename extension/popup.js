@@ -13,6 +13,8 @@ const DEFAULT_CLOCK_SETTINGS = {
   scale: 1.0,
   scaleX: 1.0,
   scaleY: 1.0,
+  fontScaleX: 1.0,
+  fontScaleY: 1.0,
   soundEnabled: false,
   soundVolume: 0.5,
   backgroundTheme: 'classic',
@@ -25,6 +27,10 @@ const DEFAULT_EXT_CONFIG = {
   autoLaunchEnabled: true,
   keepAwake: true,
   exitOnActivity: true,
+  excludedSites: [
+    { domain: 'youtube.com', mode: 'playing' },
+    { domain: 'netflix.com', mode: 'playing' },
+  ],
 };
 
 let currentClockSettings = { ...DEFAULT_CLOCK_SETTINGS };
@@ -50,6 +56,17 @@ const rngScaleX = document.getElementById('rngScaleX');
 const lblScaleX = document.getElementById('lblScaleX');
 const rngScaleY = document.getElementById('rngScaleY');
 const lblScaleY = document.getElementById('lblScaleY');
+
+const btnResetFontSize = document.getElementById('btnResetFontSize');
+const rngFontScaleX = document.getElementById('rngFontScaleX');
+const lblFontScaleX = document.getElementById('lblFontScaleX');
+const rngFontScaleY = document.getElementById('rngFontScaleY');
+const lblFontScaleY = document.getElementById('lblFontScaleY');
+
+const btnExcludeCurrentTab = document.getElementById('btnExcludeCurrentTab');
+const txtNewDomain = document.getElementById('txtNewDomain');
+const btnAddDomain = document.getElementById('btnAddDomain');
+const excludedSitesList = document.getElementById('excludedSitesList');
 
 const fontButtons = document.querySelectorAll('.font-btn');
 const chkSound = document.getElementById('chkSound');
@@ -116,6 +133,15 @@ function renderUI() {
     }
   });
 
+  // Font Size Dimensions
+  const fScaleX = currentClockSettings.fontScaleX ?? 1.0;
+  rngFontScaleX.value = fScaleX;
+  lblFontScaleX.textContent = Math.round(fScaleX * 100) + '%';
+
+  const fScaleY = currentClockSettings.fontScaleY ?? 1.0;
+  rngFontScaleY.value = fScaleY;
+  lblFontScaleY.textContent = Math.round(fScaleY * 100) + '%';
+
   // Sound
   chkSound.checked = !!currentClockSettings.soundEnabled;
   rowVolume.style.display = currentClockSettings.soundEnabled ? 'flex' : 'none';
@@ -140,6 +166,83 @@ function renderUI() {
       btn.classList.remove('active');
     }
   });
+
+  // Excluded Sites List
+  renderExcludedSites();
+}
+
+function renderExcludedSites() {
+  if (!excludedSitesList) return;
+  excludedSitesList.innerHTML = '';
+  const sites = currentExtConfig.excludedSites || [];
+
+  if (sites.length === 0) {
+    const emptyHint = document.createElement('div');
+    emptyHint.className = 'empty-sites-hint';
+    emptyHint.textContent = 'No excluded websites added yet.';
+    excludedSitesList.appendChild(emptyHint);
+    return;
+  }
+
+  sites.forEach((site, index) => {
+    const item = document.createElement('div');
+    item.className = 'excluded-site-item';
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'site-domain-text';
+    nameSpan.textContent = site.domain;
+    nameSpan.title = site.domain;
+
+    const controls = document.createElement('div');
+    controls.className = 'site-controls';
+
+    const select = document.createElement('select');
+    select.className = 'site-rule-select';
+    select.innerHTML = `
+      <option value="always">All Time</option>
+      <option value="playing">While Playing</option>
+    `;
+    select.value = site.mode || 'always';
+    select.addEventListener('change', (e) => {
+      const newSites = [...(currentExtConfig.excludedSites || [])];
+      if (newSites[index]) {
+        newSites[index] = { ...newSites[index], mode: e.target.value };
+        saveExtConfig({ excludedSites: newSites });
+      }
+    });
+
+    const btnRemove = document.createElement('button');
+    btnRemove.className = 'btn-remove-site';
+    btnRemove.innerHTML = '✕';
+    btnRemove.title = `Remove ${site.domain}`;
+    btnRemove.addEventListener('click', () => {
+      const newSites = (currentExtConfig.excludedSites || []).filter((_, i) => i !== index);
+      saveExtConfig({ excludedSites: newSites });
+    });
+
+    controls.appendChild(select);
+    controls.appendChild(btnRemove);
+    item.appendChild(nameSpan);
+    item.appendChild(controls);
+    excludedSitesList.appendChild(item);
+  });
+}
+
+function addExcludedDomain(rawDomain, defaultMode = 'always') {
+  if (!rawDomain) return;
+  const clean = rawDomain.toLowerCase().trim()
+    .replace(/^https?:\/\//, '')
+    .replace(/\/.*$/, '')
+    .replace(/^www\./, '');
+  if (!clean) return;
+
+  const existing = currentExtConfig.excludedSites || [];
+  if (existing.some((s) => s.domain === clean)) {
+    return;
+  }
+
+  const newSites = [...existing, { domain: clean, mode: defaultMode }];
+  saveExtConfig({ excludedSites: newSites });
 }
 
 function saveClockSettings(partial) {
@@ -171,6 +274,33 @@ selIdleTimeout.addEventListener('change', (e) => {
 
 chkKeepAwake.addEventListener('change', (e) => {
   saveExtConfig({ keepAwake: e.target.checked });
+});
+
+btnAddDomain?.addEventListener('click', () => {
+  addExcludedDomain(txtNewDomain.value);
+  txtNewDomain.value = '';
+});
+
+txtNewDomain?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    addExcludedDomain(txtNewDomain.value);
+    txtNewDomain.value = '';
+  }
+});
+
+btnExcludeCurrentTab?.addEventListener('click', async () => {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs && tabs[0] && tabs[0].url) {
+      const urlObj = new URL(tabs[0].url);
+      if (urlObj.protocol === 'http:' || urlObj.protocol === 'https:') {
+        const domain = urlObj.hostname.replace(/^www\./, '');
+        addExcludedDomain(domain, 'always');
+      }
+    }
+  } catch (err) {
+    console.warn('Could not read current tab URL:', err);
+  }
 });
 
 btn12h.addEventListener('click', () => saveClockSettings({ format: '12h' }));
@@ -205,6 +335,22 @@ fontButtons.forEach((btn) => {
   btn.addEventListener('click', () => {
     saveClockSettings({ fontFamily: btn.dataset.font });
   });
+});
+
+rngFontScaleX.addEventListener('input', (e) => {
+  const val = parseFloat(e.target.value);
+  lblFontScaleX.textContent = Math.round(val * 100) + '%';
+  saveClockSettings({ fontScaleX: val });
+});
+
+rngFontScaleY.addEventListener('input', (e) => {
+  const val = parseFloat(e.target.value);
+  lblFontScaleY.textContent = Math.round(val * 100) + '%';
+  saveClockSettings({ fontScaleY: val });
+});
+
+btnResetFontSize.addEventListener('click', () => {
+  saveClockSettings({ fontScaleX: 1.0, fontScaleY: 1.0 });
 });
 
 chkSound.addEventListener('change', (e) => {

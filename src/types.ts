@@ -4,21 +4,43 @@ export type BackgroundTheme = 'classic' | 'oled' | 'charcoal' | 'navy';
 
 export type TextColorTheme = 'white' | 'vintage-cream' | 'retro-amber' | 'cyan';
 
-export type FontFamilyId = 'fliqlo' | 'barlow-condensed' | 'libre-baskerville' | 'ubuntu';
+export type FontFamilyId =
+  | 'fliqlo'
+  | 'flip-white'
+  | 'fliqlo-mac'
+  | 'barlow-condensed'
+  | 'libre-baskerville'
+  | 'ubuntu';
 
 export interface FontOption {
   id: FontFamilyId;
   name: string;
   fontFamily: string;
   description: string;
+  badge?: string;
 }
 
 export const AVAILABLE_FONTS: FontOption[] = [
   {
     id: 'fliqlo',
-    name: 'Fliqlo Original',
-    fontFamily: '"Fliqlo", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif',
-    description: 'Official iconic screensaver font by Yuji Adachi',
+    name: 'Fliqlo (FLIP Clock)',
+    fontFamily: '"FLIPclock", "Fliqlo", sans-serif',
+    description: 'Authentic solid flip clock retro numerals',
+    badge: 'Fliqlo',
+  },
+  {
+    id: 'flip-white',
+    name: 'FLIP Clock White',
+    fontFamily: '"FLIPclock-White", "FLIPclock", sans-serif',
+    description: 'Hollow retro outline split-flap numerals',
+    badge: 'Outline',
+  },
+  {
+    id: 'fliqlo-mac',
+    name: 'Fliqlo Mac OS',
+    fontFamily: '"Fliqlo-Mac", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif',
+    description: 'Classic screensaver font by Yuji Adachi',
+    badge: 'Mac OS',
   },
   {
     id: 'barlow-condensed',
@@ -49,6 +71,8 @@ export interface ClockSettings {
   scale: number; // Overall scale: 0.4 to 4.0, default 1.0
   scaleX: number; // Horizontal scale: 0.4 to 2.5, default 1.0
   scaleY: number; // Vertical scale: 0.4 to 2.5, default 1.0
+  fontScaleX: number; // Numeral Font Width (horizontal stretch/condense): 0.4 to 2.5, default 1.0
+  fontScaleY: number; // Numeral Font Height (vertical size/tallness): 0.4 to 2.5, default 1.0
   soundEnabled: boolean;
   soundVolume: number; // 0 to 1
   backgroundTheme: BackgroundTheme;
@@ -65,6 +89,8 @@ export const DEFAULT_SETTINGS: ClockSettings = {
   scale: 1.0,
   scaleX: 1.0,
   scaleY: 1.0,
+  fontScaleX: 1.0,
+  fontScaleY: 1.0,
   soundEnabled: false,
   soundVolume: 0.5,
   backgroundTheme: 'classic',

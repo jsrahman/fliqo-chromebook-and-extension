@@ -2,9 +2,33 @@
    Fliqlo Flip Clock - Local Fonts
    ========================================================================== */
 
-/* Fliqlo Official Fonts */
+/* Fliqlo Official & FLIP Clock Fonts */
+@font-face {
+  font-family: 'FLIPclock';
+  src: url('/fonts/FLIPclockblack.ttf') format('truetype');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FLIPclock-White';
+  src: url('/fonts/FLIPclockwhite.ttf') format('truetype');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @font-face {
   font-family: 'Fliqlo';
+  src: url('/fonts/FLIPclockblack.ttf') format('truetype');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Fliqlo-Mac';
   src: url('/fonts/FliqloBold.otf') format('opentype');
   font-weight: 700 900;
   font-style: normal;
@@ -12,7 +36,7 @@
 }
 
 @font-face {
-  font-family: 'Fliqlo';
+  font-family: 'Fliqlo-Mac';
   src: url('/fonts/FliqloMedium.otf') format('opentype');
   font-weight: 400 600;
   font-style: normal;
@@ -22,7 +46,31 @@
 /* Barlow Condensed */
 @font-face {
   font-family: 'Barlow Condensed';
-  src: url('/fonts/BarlowCondensed-Bold.woff2') format('woff2');
+  src: url('/fonts/BarlowCondensed-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('/fonts/BarlowCondensed-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('/fonts/BarlowCondensed-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('/fonts/BarlowCondensed-700.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -30,7 +78,7 @@
 
 @font-face {
   font-family: 'Barlow Condensed';
-  src: url('/fonts/BarlowCondensed-ExtraBold.woff2') format('woff2');
+  src: url('/fonts/BarlowCondensed-800.woff2') format('woff2');
   font-weight: 800;
   font-style: normal;
   font-display: swap;
@@ -38,7 +86,7 @@
 
 @font-face {
   font-family: 'Barlow Condensed';
-  src: url('/fonts/BarlowCondensed-Black.woff2') format('woff2');
+  src: url('/fonts/BarlowCondensed-900.woff2') format('woff2');
   font-weight: 900;
   font-style: normal;
   font-display: swap;
@@ -47,7 +95,15 @@
 /* Libre Baskerville */
 @font-face {
   font-family: 'Libre Baskerville';
-  src: url('/fonts/LibreBaskerville-Bold.woff2') format('woff2');
+  src: url('/fonts/LibreBaskerville-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Libre Baskerville';
+  src: url('/fonts/LibreBaskerville-700.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -56,7 +112,23 @@
 /* Ubuntu */
 @font-face {
   font-family: 'Ubuntu';
-  src: url('/fonts/Ubuntu-Bold.woff2') format('woff2');
+  src: url('/fonts/Ubuntu-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('/fonts/Ubuntu-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('/fonts/Ubuntu-700.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -79,6 +151,8 @@
   --ui-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --clock-font: 'Fliqlo', -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
   --clock-font-weight: 800;
+  --font-scale-x: 1;
+  --font-scale-y: 1;
 }
 
 * {
@@ -89,7 +163,21 @@
 
 /* Font classes & Optical Baseline Alignments */
 .font-fliqlo {
-  --clock-font: 'Fliqlo', -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  --clock-font: 'FLIPclock', 'Fliqlo', sans-serif;
+  --clock-font-weight: 700;
+  --font-y-offset: -0.133em;
+  --font-x-offset: 0em;
+}
+
+.font-flip-white {
+  --clock-font: 'FLIPclock-White', 'FLIPclock', sans-serif;
+  --clock-font-weight: 700;
+  --font-y-offset: -0.133em;
+  --font-x-offset: 0em;
+}
+
+.font-fliqlo-mac {
+  --clock-font: 'Fliqlo-Mac', -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
   --clock-font-weight: 800;
   --font-y-offset: 0.133em;
   --font-x-offset: 0em;
@@ -177,6 +265,16 @@
   user-select: none;
   -webkit-user-select: none;
   transition: background-color 0.4s ease;
+}
+
+.fliqlo-app.is-screensaver {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  z-index: 999999 !important;
 }
 
 /* Clock Wrapper */
@@ -270,7 +368,8 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   font-variant-numeric: tabular-nums lining-nums;
-  transform: translateY(var(--font-y-offset, 0)) translateX(var(--font-x-offset, 0));
+  transform: translateY(var(--font-y-offset, 0)) translateX(var(--font-x-offset, 0)) scale(var(--font-scale-x, 1), var(--font-scale-y, 1));
+  transform-origin: center center;
 }
 
 /* Seconds card number size */
@@ -514,6 +613,8 @@
   outline: none;
   transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  text-decoration: none;
+  user-select: none;
 }
 
 .action-button:hover {
@@ -526,6 +627,10 @@
 
 .action-button:active {
   transform: translateY(1px);
+}
+
+.action-button.extension-button:hover {
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
 .action-button svg {

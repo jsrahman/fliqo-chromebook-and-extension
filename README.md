@@ -47,3 +47,19 @@ Visit [http://127.0.0.1:5173](http://127.0.0.1:5173).
 npm run build
 npm run preview
 ```
+
+### Build Chrome Screensaver Extension (.zip)
+```bash
+npm run extension-build
+```
+This builds the latest React web application, synchronizes the assets into `extension/app/`, and packages the extension into ready-to-distribute ZIP archives:
+- `extension.zip` & `fliqlo-extension.zip` in project root
+- `public/fliqlo-extension.zip` (for web download)
+- `dist/fliqlo-extension.zip`
+
+### Installing the Extension
+1. Run `npm run extension-build` or click **Extension** on the webpage to download `fliqlo-extension.zip`.
+2. Extract `fliqlo-extension.zip`.
+3. Open Chrome and navigate to `chrome://extensions`.
+4. Enable **Developer mode** in the top right corner.
+5. Click **Load unpacked** and select the unzipped `extension` directory.
