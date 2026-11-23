@@ -381,7 +381,8 @@ export const InfoModal: React.FC<InfoModalProps> = ({
                 <h4 className="faq-q">Does Fliqlo Web work without an internet connection?</h4>
                 <p className="faq-a">
                   Yes! All fonts, CSS animations, and procedural flap click audio run 100% locally on your machine.
-                  Once loaded, it works entirely offline.
+                  On your very first visit, the Progressive Web App (PWA) service worker automatically caches all HTML, stylesheets, scripts, and fonts.
+                  Once visited, the full website works completely offline with zero internet required.
                 </p>
               </div>
               <div className="faq-item">

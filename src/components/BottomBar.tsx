@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Maximize, Minimize, Puzzle, Check, HelpCircle, Star } from 'lucide-react';
+import { Settings, Maximize, Minimize, Puzzle, Check, HelpCircle, Star, WifiOff } from 'lucide-react';
 import { isFullscreenActive, toggleFullscreenSafe } from '../utils/fullscreen';
 
 interface BottomBarProps {
@@ -16,6 +16,20 @@ export const BottomBar: React.FC<BottomBarProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isDownloaded, setIsDownloaded] = useState(false);
   const [stars, setStars] = useState<number | null>(null);
+  const [isOffline, setIsOffline] = useState(
+    typeof navigator !== 'undefined' ? !navigator.onLine : false
+  );
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const CACHE_KEY = 'fliqlo_github_stars_cache';
@@ -87,6 +101,12 @@ export const BottomBar: React.FC<BottomBarProps> = ({
   return (
     <footer className={`bottom-bar ${isVisible ? '' : 'hidden'}`}>
       <div className="bottom-hints">
+        {isOffline && (
+          <span className="offline-badge" title="Running 100% offline from browser cache">
+            <WifiOff size={12} />
+            <span>Offline</span>
+          </span>
+        )}
         <span><kbd>C</kbd> Mode</span>
         <span><kbd>S</kbd> Settings</span>
         <span><kbd>F</kbd> / <kbd>Esc</kbd> Fullscreen</span>

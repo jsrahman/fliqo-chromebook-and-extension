@@ -924,6 +924,20 @@
   font-size: 10px;
 }
 
+.offline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(245, 158, 11, 0.16);
+  border: 1px solid rgba(245, 158, 11, 0.38);
+  color: #fbbf24;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 /* ==========================================================================
    Settings Modal - Authentic Fliqlo Aesthetic
    ========================================================================== */
