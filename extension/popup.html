@@ -32,8 +32,11 @@
             <span class="git-star-sym">★</span>
             <span id="txtHeaderStars" class="git-star-val">0</span>
           </a>
+          <button id="btnLaunchCountdown" class="btn-launch-subtle" title="Launch split-flap countdown timer in a new tab">
+            ⏳ Countdown
+          </button>
           <button id="btnLaunch" class="btn-launch" title="Launch fullscreen screensaver now">
-            ▶ Launch
+            ▶ Screensaver
           </button>
         </div>
       </div>
@@ -42,6 +45,9 @@
       <nav class="tabs-nav-bar" role="tablist" aria-label="Extension sections">
         <button type="button" class="tab-btn active" data-tab="timer" title="Keep Awake & Duration" role="tab" aria-selected="true">
           <svg viewBox="0 0 24 24" class="tab-icon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M18 4h3l-3 3h3" stroke-width="1.6"/><path d="M15 1.5h2l-2 2h2" stroke-width="1.4"/></svg>
+        </button>
+        <button type="button" class="tab-btn" data-tab="countdown" title="Split-Flap Countdown Timer" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24" class="tab-icon"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>
         </button>
         <button type="button" class="tab-btn" data-tab="filter" title="Excluded Websites" role="tab" aria-selected="false">
           <svg viewBox="0 0 24 24" class="tab-icon"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
@@ -74,7 +80,7 @@
               <button type="button" class="quick-chip" id="btnQuickAdd60" title="Add 1 hour">+1h</button>
             </div>
             <label class="switch" title="Enable screensaver duration auto-close">
-              <input type="checkbox" id="chkDurationLimit" />
+              <input type="checkbox" id="chkDurationLimit" checked />
               <span class="slider" />
             </label>
           </div>
@@ -84,10 +90,10 @@
             <button type="button" class="dur-chip" data-min="15">15m</button>
             <button type="button" class="dur-chip" data-min="30">30m</button>
             <button type="button" class="dur-chip" data-min="60">1h</button>
-            <button type="button" class="dur-chip" data-min="120">2h</button>
+            <button type="button" class="dur-chip active" data-min="120">2h</button>
             <button type="button" class="dur-chip" data-min="240">4h</button>
             <button type="button" class="dur-chip" data-min="480">8h</button>
-            <button type="button" class="dur-chip active" id="chipInfinite" data-min="0">∞</button>
+            <button type="button" class="dur-chip" id="chipInfinite" data-min="0">∞</button>
             <button type="button" class="dur-chip" id="chipUntil" data-type="until">Until...</button>
           </div>
 
@@ -99,13 +105,16 @@
           </div>
 
           <div class="chips-hint">
-            Click a chip to set screensaver duration. Click ∞ to run until activity.
+            Click a chip to set screensaver duration. Default is 2 hours. Click ∞ to run until activity.
           </div>
 
-          <!-- Active screensaver status pill -->
+          <!-- Active screensaver & countdown status card -->
           <div id="activeScreensaverBanner" class="screensaver-banner" style="display: none;">
             <div class="banner-pulse"></div>
-            <span id="bannerText" class="banner-text">Screensaver active</span>
+            <div class="banner-content">
+              <span id="bannerText" class="banner-text">Screensaver active</span>
+              <div id="bannerCountdown" class="banner-countdown">02:00:00</div>
+            </div>
             <button type="button" id="btnBannerClose" class="btn-banner-close">Close</button>
           </div>
         </div>
@@ -149,7 +158,54 @@
         </div>
       </div>
 
-      <!-- TAB 2: EXCLUDED WEBSITES -->
+      <!-- TAB 2: SPLIT-FLAP COUNTDOWN TIMER -->
+      <div id="tabContent-countdown" class="tab-pane" role="tabpanel">
+        <span class="section-title">SPLIT-FLAP COUNTDOWN TIMER</span>
+
+        <p class="pref-desc" style="margin: 2px 0 10px 0;">
+          Run an authentic split-flap countdown. When the countdown completes, it automatically launches the fullscreen screensaver!
+        </p>
+
+        <div class="duration-box">
+          <span class="pref-desc" style="font-weight: 600; color: #ddd; margin-bottom: 6px; display: block;">
+            Select Countdown Starting Time:
+          </span>
+          <div class="duration-chips-grid">
+            <button type="button" class="dur-chip countdown-chip" data-min="15">15m</button>
+            <button type="button" class="dur-chip countdown-chip" data-min="25">25m</button>
+            <button type="button" class="dur-chip countdown-chip" data-min="30">30m</button>
+            <button type="button" class="dur-chip countdown-chip" data-min="60">1h</button>
+            <button type="button" class="dur-chip countdown-chip active" data-min="120">2h</button>
+            <button type="button" class="dur-chip countdown-chip" data-min="240">4h</button>
+          </div>
+
+          <div class="chips-hint" style="margin-top: 10px;">
+            Default is 2 hours. Counts down with mechanical split-flap sounds and animations.
+          </div>
+        </div>
+
+        <button type="button" id="btnLaunchCountdownTab" class="btn-launch-large btn-launch-countdown-large" style="margin-top: 12px;">
+          ⏳ Launch Fullscreen Countdown in Tab
+        </button>
+
+        <div class="shortcuts-box" style="margin-top: 12px;">
+          <span class="shortcuts-title">Countdown Controls</span>
+          <div class="shortcut-item">
+            <span>Toggle Screensaver / Countdown</span>
+            <kbd>C</kbd>
+          </div>
+          <div class="shortcut-item">
+            <span>Start / Pause Countdown</span>
+            <kbd>Space</kbd>
+          </div>
+          <div class="shortcut-item">
+            <span>Reset Countdown</span>
+            <kbd>R</kbd>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: EXCLUDED WEBSITES -->
       <div id="tabContent-filter" class="tab-pane" role="tabpanel">
         <div class="section-header-split">
           <span class="section-title">EXCLUDED WEBSITES</span>
@@ -350,12 +406,21 @@
       <div id="tabContent-about" class="tab-pane" role="tabpanel">
         <span class="section-title">SHORTCUTS & ACTIONS</span>
 
-        <button type="button" id="btnLaunchLarge" class="btn-launch-large">
-          ▶ Launch Fullscreen Screensaver Now
-        </button>
+        <div class="launch-actions-stack">
+          <button type="button" id="btnLaunchLarge" class="btn-launch-large">
+            ▶ Launch Fullscreen Screensaver Now
+          </button>
+          <button type="button" id="btnLaunchCountdownLarge" class="btn-launch-large btn-launch-countdown-large">
+            ⏳ Launch Split-Flap Countdown Timer
+          </button>
+        </div>
 
         <div class="shortcuts-box">
           <span class="shortcuts-title">Keyboard Shortcuts</span>
+          <div class="shortcut-item">
+            <span>Toggle Screensaver / Countdown mode</span>
+            <kbd>C</kbd>
+          </div>
           <div class="shortcut-item">
             <span>Close screensaver / Leave fullscreen</span>
             <kbd>Esc</kbd>

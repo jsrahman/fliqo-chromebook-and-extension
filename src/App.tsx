@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Clock, Hourglass } from 'lucide-react';
 import { FlipClock } from './components/FlipClock';
+import { FlipCountdown } from './components/FlipCountdown';
 import { BottomBar } from './components/BottomBar';
 import { SettingsModal } from './components/SettingsModal';
 import { InfoModal } from './components/InfoModal';
-import { ClockSettings, DEFAULT_SETTINGS } from './types';
+import { ClockSettings, DEFAULT_SETTINGS, AppMode } from './types';
 import { parseUrlSettings } from './utils/urlSettings';
 import { isFullscreenActive, exitFullscreenSafe, toggleFullscreenSafe } from './utils/fullscreen';
 import './styles/flipclock.css';
@@ -52,6 +54,18 @@ export function App() {
   });
   const [isControlsVisible, setIsControlsVisible] = useState(true);
   const [isCursorHidden, setIsCursorHidden] = useState(false);
+
+  // Tab mode state: 'screensaver' (Clock) or 'countdown' (Split-flap Timer)
+  const [activeMode, setActiveMode] = useState<AppMode>(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      const tabParam = p.get('tab') || p.get('mode');
+      if (tabParam === 'countdown' || tabParam === 'timer') {
+        return 'countdown';
+      }
+    }
+    return 'screensaver';
+  });
 
   const idleTimerRef = useRef<number | null>(null);
 
@@ -186,6 +200,32 @@ export function App() {
     }
   }, []);
 
+  // When countdown completes, transition to screensaver
+  const handleCountdownComplete = useCallback(() => {
+    setActiveMode('screensaver');
+  }, []);
+
+  // Extension screensaver: auto-close when configured duration expires
+  useEffect(() => {
+    if (!isExtensionScreensaver) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const chromeObj = (window as unknown as { chrome?: any }).chrome;
+    if (!chromeObj?.storage?.local) return;
+
+    const checkAutoClose = () => {
+      chromeObj.storage.local.get(['screensaverEndTime'], (res: { screensaverEndTime?: number }) => {
+        if (res?.screensaverEndTime && Date.now() >= res.screensaverEndTime) {
+          closeExtensionScreensaver();
+        }
+      });
+    };
+
+    const intervalId = window.setInterval(checkAutoClose, 1000);
+    checkAutoClose();
+
+    return () => window.clearInterval(intervalId);
+  }, [isExtensionScreensaver, closeExtensionScreensaver]);
+
   // Extension screensaver: Escape key in ANY state MUST close the screensaver immediately
   useEffect(() => {
     if (!isExtensionScreensaver) return;
@@ -283,6 +323,9 @@ export function App() {
       } else if (e.key === 'i' || e.key === 'I' || e.key === '?') {
         e.preventDefault();
         setIsInfoOpen((prev) => !prev);
+      } else if (e.key === 'c' || e.key === 'C') {
+        e.preventDefault();
+        setActiveMode((prev) => (prev === 'screensaver' ? 'countdown' : 'screensaver'));
       } else if (e.code === 'Space') {
         e.preventDefault();
         handleUpdateSettings({
@@ -305,8 +348,48 @@ export function App() {
       onMouseMove={handleUserActivity}
       onClick={handleUserActivity}
     >
-      {/* Flip Clock Display */}
-      <FlipClock settings={settings} />
+      {/* Mode Navigation Tabs (Screensaver vs Countdown) */}
+      {!isExtensionScreensaver && (
+        <nav
+          className={`mode-tabs-bar ${isControlsVisible || isSettingsOpen || isInfoOpen ? '' : 'hidden'}`}
+          role="tablist"
+          aria-label="Clock and screensaver modes"
+        >
+          <button
+            type="button"
+            className={`mode-tab-btn ${activeMode === 'screensaver' ? 'active' : ''}`}
+            onClick={() => setActiveMode('screensaver')}
+            role="tab"
+            aria-selected={activeMode === 'screensaver'}
+            title="Screensaver Clock (Press C to switch)"
+          >
+            <Clock size={15} aria-hidden="true" />
+            <span>Screensaver</span>
+          </button>
+          <button
+            type="button"
+            className={`mode-tab-btn ${activeMode === 'countdown' ? 'active' : ''}`}
+            onClick={() => setActiveMode('countdown')}
+            role="tab"
+            aria-selected={activeMode === 'countdown'}
+            title="Split-Flap Countdown Timer (Press C to switch)"
+          >
+            <Hourglass size={15} aria-hidden="true" />
+            <span>Countdown</span>
+          </button>
+        </nav>
+      )}
+
+      {/* Flip Clock Display or Flip Countdown Display */}
+      {activeMode === 'screensaver' ? (
+        <FlipClock settings={settings} />
+      ) : (
+        <FlipCountdown
+          settings={settings}
+          onComplete={handleCountdownComplete}
+          isVisible={isControlsVisible || isSettingsOpen || isInfoOpen}
+        />
+      )}
 
       {/* Bottom Bar: hidden if extension screensaver mode requested without controls, or when idle */}
       {!isExtensionScreensaver && (

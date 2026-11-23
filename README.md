@@ -14,10 +14,19 @@ An authentic, modern web recreation of the iconic **Fliqlo** (also commonly sear
   - Bold Solari flip clock typography with authentic proportions.
   - AM / PM indicator badge on the hours card in 12-hour mode.
 
+- **Split-Flap Countdown Timer & Screensaver Tab System**:
+  - **Dual Mode UI**: Seamless top-pill tab bar switching between **Screensaver (Clock)** and **Countdown Timer**, both sharing the identical authentic Solari split-flap aesthetic.
+  - **Default 2 Hours**: Preset to 2 hours with instant quick chips (15m, 30m, 1h, 2h, 4h, 25m Pomodoro) and +/- adjustment buttons.
+  - **Auto-Start Screensaver**: Automatically transitions to the fullscreen flip clock screensaver when countdown reaches 00:00:00!
+  - **Keyboard Mode Switch**: Press <kbd>C</kbd> to toggle between Screensaver and Countdown.
+  - **URL Parameter Access**: Launch directly with `?tab=countdown` or `?mode=countdown`.
+
 - **Solves the Chrome OS & Chromebook Limitation**:
   - **Direct Fullscreen**: Press `F` to enter distraction-free full-screen screensaver on any Chromebook.
   - **Auto-Hide Cursor & Controls**: Interface and cursor seamlessly fade away after 3 seconds of inactivity.
   - **Automated Idle Extension**: Packaged Chrome Extension (`fliqlo-extension.zip`) listens for idle time and launches automatically.
+  - **Default 2-Hour Auto-Close Duration**: Screensaver is set to 2 hours by default, auto-closing reliably when the time expires.
+  - **Live Extension Countdown**: Active screensaver displays real-time countdown on the Chrome toolbar badge and inside the extension popup.
   - **PWA Ready**: Install onto your Chromebook shelf directly from Chrome's omnibox.
 
 - **Full Web Custom Options**:
@@ -51,10 +60,12 @@ An authentic, modern web recreation of the iconic **Fliqlo** (also commonly sear
 
 | Shortcut | Description |
 |----------|-------------|
+| <kbd>C</kbd> | Toggle between Screensaver (Clock) and Countdown mode |
 | <kbd>F</kbd> | Toggle Fullscreen mode |
 | <kbd>S</kbd> | Toggle Settings customization dialog |
 | <kbd>I</kbd> or <kbd>?</kbd> | Toggle Chrome OS Guide & About dialog |
-| <kbd>Space</kbd> | Instant toggle between 12-Hour and 24-Hour mode |
+| <kbd>Space</kbd> | Start/Pause in Countdown mode, or toggle 12/24-Hour mode in Screensaver |
+| <kbd>R</kbd> | Reset Countdown timer (in Countdown mode) |
 | <kbd>Esc</kbd> | Close dialogs, exit fullscreen, or close screensaver |
 
 ---

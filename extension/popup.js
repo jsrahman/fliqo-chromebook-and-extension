@@ -27,9 +27,9 @@ const DEFAULT_EXT_CONFIG = {
   autoLaunchEnabled: true,
   keepAwake: true,
   exitOnActivity: true,
-  enableDurationLimit: false,
+  enableDurationLimit: true, // Selected by default
   durationMode: 'duration', // 'duration' | 'until'
-  durationMinutes: 30, // Default 30 min duration
+  durationMinutes: 120, // Default 2 hours duration
   untilTime: '', // "HH:MM" e.g. "17:00"
   excludedSites: [
     { domain: 'youtube.com', mode: 'playing' },
@@ -48,7 +48,9 @@ const tabPanes = document.querySelectorAll('.tab-pane');
 
 // DOM Elements: Header & Quick Actions
 const btnLaunch = document.getElementById('btnLaunch');
+const btnLaunchCountdown = document.getElementById('btnLaunchCountdown');
 const btnLaunchLarge = document.getElementById('btnLaunchLarge');
+const btnLaunchCountdownLarge = document.getElementById('btnLaunchCountdownLarge');
 
 // DOM Elements: Duration & Keep Awake (Tab 1)
 const chkDurationLimit = document.getElementById('chkDurationLimit');
@@ -63,6 +65,7 @@ const btnApplyUntil = document.getElementById('btnApplyUntil');
 
 const activeScreensaverBanner = document.getElementById('activeScreensaverBanner');
 const bannerText = document.getElementById('bannerText');
+const bannerCountdown = document.getElementById('bannerCountdown');
 const btnBannerClose = document.getElementById('btnBannerClose');
 
 const chkAutoLaunch = document.getElementById('chkAutoLaunch');
@@ -146,6 +149,14 @@ chrome.storage.sync.get([CLOCK_STORAGE_KEY, EXT_CONFIG_KEY], (res) => {
   }
   if (res[EXT_CONFIG_KEY]) {
     currentExtConfig = { ...DEFAULT_EXT_CONFIG, ...res[EXT_CONFIG_KEY] };
+    // Migration: If user previously had 30m default with duration disabled, update to 2h default
+    if (currentExtConfig.durationMinutes === 30 && !currentExtConfig.enableDurationLimit) {
+      currentExtConfig.durationMinutes = 120;
+      currentExtConfig.enableDurationLimit = true;
+      chrome.storage.sync.set({ [EXT_CONFIG_KEY]: currentExtConfig });
+    }
+  } else {
+    chrome.storage.sync.set({ [EXT_CONFIG_KEY]: DEFAULT_EXT_CONFIG });
   }
   renderUI();
   pollScreensaverStatus();
@@ -164,10 +175,10 @@ function pollScreensaverStatus() {
       chrome.runtime.sendMessage({ action: 'get_screensaver_status' }, (res) => {
         if (!chrome.runtime.lastError && res) {
           screensaverStatus = res;
-          updateBannerUI();
         }
+        updateBannerUI();
       });
-    }, 2000);
+    }, 1000);
   }
 }
 
@@ -175,17 +186,28 @@ function updateBannerUI() {
   if (screensaverStatus.isOpen) {
     activeScreensaverBanner.style.display = 'flex';
     if (screensaverStatus.endTime) {
-      const remainingMs = screensaverStatus.endTime - Date.now();
+      const remainingMs = Math.max(0, screensaverStatus.endTime - Date.now());
       if (remainingMs > 0) {
-        const remainingMin = Math.ceil(remainingMs / 60000);
+        const totalSec = Math.ceil(remainingMs / 1000);
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         const endDate = new Date(screensaverStatus.endTime);
         const endStr = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        bannerText.textContent = `Running • Closes at ${endStr} (${remainingMin}m left)`;
+
+        bannerText.textContent = `Screensaver Active • Ends at ${endStr}`;
+        if (bannerCountdown) {
+          bannerCountdown.textContent = timeStr;
+          bannerCountdown.style.display = 'block';
+        }
       } else {
         bannerText.textContent = `Screensaver closing...`;
+        if (bannerCountdown) bannerCountdown.textContent = '00:00:00';
       }
     } else {
       bannerText.textContent = `Screensaver active (Unlimited)`;
+      if (bannerCountdown) bannerCountdown.style.display = 'none';
     }
   } else {
     activeScreensaverBanner.style.display = 'none';
@@ -513,6 +535,26 @@ const triggerLaunch = () => {
 };
 btnLaunch.addEventListener('click', triggerLaunch);
 btnLaunchLarge.addEventListener('click', triggerLaunch);
+
+// Launch Countdown Timer Now
+const triggerLaunchCountdown = () => {
+  chrome.runtime.sendMessage({ action: 'launch_countdown_tab' }, () => {
+    window.close();
+  });
+};
+if (btnLaunchCountdown) btnLaunchCountdown.addEventListener('click', triggerLaunchCountdown);
+if (btnLaunchCountdownLarge) btnLaunchCountdownLarge.addEventListener('click', triggerLaunchCountdown);
+
+const btnLaunchCountdownTab = document.getElementById('btnLaunchCountdownTab');
+if (btnLaunchCountdownTab) btnLaunchCountdownTab.addEventListener('click', triggerLaunchCountdown);
+
+const countdownChips = document.querySelectorAll('.countdown-chip');
+countdownChips.forEach((chip) => {
+  chip.addEventListener('click', () => {
+    countdownChips.forEach((c) => c.classList.remove('active'));
+    chip.classList.add('active');
+  });
+});
 
 // =============================================================================
 // EVENT LISTENERS: EXCLUDED WEBSITES (TAB 2)

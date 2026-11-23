@@ -1,5 +1,7 @@
 export type TimeFormat = '12h' | '24h';
 
+export type AppMode = 'screensaver' | 'countdown';
+
 export type BackgroundTheme = 'classic' | 'oled' | 'charcoal' | 'navy';
 
 export type TextColorTheme = 'white' | 'vintage-cream' | 'retro-amber' | 'cyan';

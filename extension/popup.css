@@ -123,6 +123,24 @@ body {
   transform: translateY(-1px);
 }
 
+.btn-launch-subtle {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-launch-subtle:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
 /* Tabs Navigation Bar (User reference design) */
 .tabs-nav-bar {
   display: flex;
@@ -358,10 +376,11 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(37, 99, 235, 0.15);
-  border: 1px solid rgba(37, 99, 235, 0.3);
+  background: rgba(255, 107, 53, 0.12);
+  border: 1px solid rgba(255, 107, 53, 0.35);
   border-radius: 8px;
-  padding: 6px 10px;
+  padding: 8px 12px;
+  gap: 8px;
 }
 
 .banner-pulse {
@@ -380,11 +399,28 @@ body {
   100% { opacity: 0.5; }
 }
 
-.banner-text {
-  font-size: 11px;
-  color: #93c5fd;
-  font-weight: 600;
+.banner-content {
+  display: flex;
+  flex-direction: column;
   flex: 1;
+  gap: 2px;
+}
+
+.banner-text {
+  font-size: 10.5px;
+  color: #ff9e7d;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.banner-countdown {
+  font-family: monospace, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
 }
 
 .btn-banner-close {
@@ -393,7 +429,7 @@ body {
   color: #fff;
   font-size: 10px;
   font-weight: 600;
-  padding: 2px 7px;
+  padding: 4px 9px;
   border-radius: 4px;
   cursor: pointer;
 }
@@ -748,6 +784,12 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 /* Shortcuts & About box */
+.launch-actions-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .btn-launch-large {
   background: #ffffff;
   color: #111;
@@ -764,6 +806,17 @@ input[type="range"]::-webkit-slider-thumb {
 .btn-launch-large:hover {
   background: #e0e0e0;
   transform: translateY(-1px);
+}
+
+.btn-launch-countdown-large {
+  background: rgba(255, 107, 53, 0.15);
+  color: #ff9e7d;
+  border: 1px solid rgba(255, 107, 53, 0.3);
+}
+
+.btn-launch-countdown-large:hover {
+  background: rgba(255, 107, 53, 0.25);
+  color: #fff;
 }
 
 .shortcuts-box {

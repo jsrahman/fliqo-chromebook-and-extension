@@ -87,6 +87,7 @@ export const BottomBar: React.FC<BottomBarProps> = ({
   return (
     <footer className={`bottom-bar ${isVisible ? '' : 'hidden'}`}>
       <div className="bottom-hints">
+        <span><kbd>C</kbd> Mode</span>
         <span><kbd>S</kbd> Settings</span>
         <span><kbd>F</kbd> / <kbd>Esc</kbd> Fullscreen</span>
         <span><kbd>Space</kbd> 12/24h</span>
