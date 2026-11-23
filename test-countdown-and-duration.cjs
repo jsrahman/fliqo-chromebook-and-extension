@@ -53,6 +53,7 @@ test('App.tsx provides keyboard toggle shortcut C', () => {
 test('FlipCountdown renders 2 flip clocks for minutes/seconds, and 3 flip clocks when hours come', () => {
   assert(flipCountdownTsx.includes('flip-clock flip-countdown'), 'Must use flip-clock container');
   assert(flipCountdownTsx.includes('hours > 0 &&'), 'Hours flip unit must be conditional on hours > 0');
+  assert(flipCountdownTsx.includes('isSeconds={hours > 0}'), 'Seconds unit must use isSeconds={hours > 0} (same size when 2 cards, smaller only when 3 cards)');
   assert(flipCountdownTsx.includes('minuteDisplay'), 'Must display minutes');
   assert(flipCountdownTsx.includes('secondDisplay'), 'Must display seconds');
 });

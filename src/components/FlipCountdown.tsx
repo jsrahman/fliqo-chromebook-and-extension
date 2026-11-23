@@ -16,11 +16,10 @@ interface PresetOption {
 
 const PRESET_OPTIONS: PresetOption[] = [
   { label: '15m', seconds: 15 * 60 },
+  { label: '25m', seconds: 25 * 60 },
   { label: '30m', seconds: 30 * 60 },
   { label: '1h', seconds: 60 * 60 },
-  { label: '2h', seconds: 120 * 60 }, // 2 hours default
-  { label: '4h', seconds: 240 * 60 },
-  { label: '25m Pomodoro', seconds: 25 * 60 },
+  { label: '2h', seconds: 120 * 60 },
 ];
 
 export const FlipCountdown: React.FC<FlipCountdownProps> = ({
@@ -76,7 +75,7 @@ export const FlipCountdown: React.FC<FlipCountdownProps> = ({
   const [isRunning, setIsRunning] = useState<boolean>(initialConfig.running);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [hasFinished, setHasFinished] = useState<boolean>(false);
-  const [autoStartScreensaver, setAutoStartScreensaver] = useState<boolean>(true);
+  const autoStartScreensaver = true;
 
   const endTimeRef = useRef<number | null>(initialConfig.endTs);
 
@@ -252,34 +251,34 @@ export const FlipCountdown: React.FC<FlipCountdownProps> = ({
           soundVolume={settings.soundVolume}
         />
 
-        {/* Seconds Card */}
+        {/* Seconds Card: same size as minutes when 2 cards; smaller seconds style ONLY when 3 cards */}
         <FlipUnit
           value={secondDisplay}
-          isSeconds={true}
+          isSeconds={hours > 0}
           soundEnabled={isRunning && settings.soundEnabled}
           soundVolume={settings.soundVolume}
         />
       </div>
 
-      {/* Countdown status badge (matches Fliqlo date-badge aesthetic) */}
+      {/* Minimal Countdown status badge */}
       <div className="date-badge countdown-badge">
         <span className={`countdown-status-dot ${isRunning ? 'running' : isPaused ? 'paused' : 'ready'}`} />
         <span>
           {hasFinished
-            ? 'COUNTDOWN COMPLETED • STARTING SCREENSAVER'
+            ? 'COMPLETED'
             : isRunning
-            ? 'COUNTDOWN ACTIVE'
+            ? 'COUNTDOWN'
             : isPaused
-            ? 'COUNTDOWN PAUSED'
-            : 'COUNTDOWN READY'}
+            ? 'PAUSED'
+            : 'READY'}
         </span>
         <span className="badge-sep">•</span>
-        <span>{hours > 0 ? `${hours}h ${minutes}m ${seconds}s` : `${minutes}m ${seconds}s`}</span>
+        <span>{hours > 0 ? `${hourDisplay}:${minuteDisplay}:${secondDisplay}` : `${minuteDisplay}:${secondDisplay}`}</span>
       </div>
 
-      {/* Countdown Interactive Controls (fades out during idle just like bottom bar) */}
+      {/* Minimal Countdown Floating Control Bar (web version) */}
       <div className={`countdown-controls-panel ${isVisible ? '' : 'hidden'}`}>
-        {/* Presets Row */}
+        {/* Preset chips */}
         <div className="countdown-presets-row">
           {PRESET_OPTIONS.map((preset) => {
             const isActive = duration === preset.seconds;
@@ -296,73 +295,27 @@ export const FlipCountdown: React.FC<FlipCountdownProps> = ({
           })}
         </div>
 
-        {/* Quick Adjustment Buttons */}
-        <div className="countdown-adjust-row">
-          <button
-            type="button"
-            className="countdown-adjust-btn"
-            onClick={() => handleAdjust(-15 * 60)}
-            title="Subtract 15 minutes"
-          >
-            -15m
-          </button>
-          <button
-            type="button"
-            className="countdown-adjust-btn"
-            onClick={() => handleAdjust(15 * 60)}
-            title="Add 15 minutes"
-          >
-            +15m
-          </button>
-          <button
-            type="button"
-            className="countdown-adjust-btn"
-            onClick={() => handleAdjust(30 * 60)}
-            title="Add 30 minutes"
-          >
-            +30m
-          </button>
-          <button
-            type="button"
-            className="countdown-adjust-btn"
-            onClick={() => handleAdjust(60 * 60)}
-            title="Add 1 hour"
-          >
-            +1h
-          </button>
-        </div>
+        <div className="countdown-divider" aria-hidden="true" />
 
-        {/* Main Action Bar */}
-        <div className="countdown-actions-row">
-          <button
-            type="button"
-            className={`countdown-btn-main ${isRunning ? 'btn-pause' : 'btn-start'}`}
-            onClick={handleToggleStart}
-          >
-            {isRunning ? '⏸ Pause' : isPaused ? '▶ Resume' : '▶ Start Countdown'}
-          </button>
+        {/* Start / Pause Button */}
+        <button
+          type="button"
+          className={`countdown-btn-main ${isRunning ? 'btn-pause' : 'btn-start'}`}
+          onClick={handleToggleStart}
+          title={isRunning ? 'Pause (Space)' : 'Start (Space)'}
+        >
+          {isRunning ? '⏸ Pause' : isPaused ? '▶ Resume' : '▶ Start'}
+        </button>
 
-          <button
-            type="button"
-            className="countdown-btn-reset"
-            onClick={handleReset}
-            title="Reset countdown"
-          >
-            ↺ Reset
-          </button>
-
-          <label
-            className="countdown-auto-screensaver"
-            title="Automatically start fullscreen screensaver when countdown reaches 00:00:00"
-          >
-            <input
-              type="checkbox"
-              checked={autoStartScreensaver}
-              onChange={(e) => setAutoStartScreensaver(e.target.checked)}
-            />
-            <span className="checkbox-text">Start screensaver when finished</span>
-          </label>
-        </div>
+        {/* Reset Button */}
+        <button
+          type="button"
+          className="countdown-btn-reset"
+          onClick={handleReset}
+          title="Reset countdown (R)"
+        >
+          ↺ Reset
+        </button>
       </div>
     </div>
   );

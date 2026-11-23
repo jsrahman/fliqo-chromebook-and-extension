@@ -208,15 +208,66 @@ function pollScreensaverStatus() {
 function updateCountdownTabUI() {
   if (!activeCountdownBanner) return;
 
-  // Update live countdown readout in duration box
-  if (lblCountdownValue) {
-    const mins = selectedCountdownMinutes || 30;
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    const hStr = String(h).padStart(2, '0');
-    const mStr = String(m).padStart(2, '0');
-    const readable = h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
-    lblCountdownValue.textContent = `${hStr}:${mStr}:00 (${readable})`;
+  const cLabel = document.querySelector('#countdownLiveTimer .timer-label');
+
+  if (countdownStatus.isActive && countdownStatus.endTime) {
+    activeCountdownBanner.style.display = 'flex';
+    const remainingMs = Math.max(0, countdownStatus.endTime - Date.now());
+    if (remainingMs > 0) {
+      const totalSec = Math.ceil(remainingMs / 1000);
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      const endDate = new Date(countdownStatus.endTime);
+      const endStr = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      if (txtCountdownBannerTitle) {
+        txtCountdownBannerTitle.textContent = `Countdown Active • Ends at ${endStr}`;
+      }
+      if (lblCountdownBannerTime) {
+        lblCountdownBannerTime.textContent = timeStr;
+      }
+      // While countdown is active, count down live in the duration box!
+      if (lblCountdownValue) {
+        lblCountdownValue.textContent = `${timeStr} (Remaining)`;
+      }
+      if (cLabel) {
+        cLabel.textContent = 'Countdown Running';
+      }
+    } else {
+      if (txtCountdownBannerTitle) txtCountdownBannerTitle.textContent = `Starting Screensaver...`;
+      if (lblCountdownBannerTime) lblCountdownBannerTime.textContent = '00:00:00';
+      if (lblCountdownValue) lblCountdownValue.textContent = '00:00:00';
+    }
+
+    if (btnLaunchCountdownTab) {
+      btnLaunchCountdownTab.textContent = '⏳ Reopen Fullscreen Countdown';
+    }
+  } else {
+    activeCountdownBanner.style.display = 'none';
+    if (cLabel) {
+      cLabel.textContent = 'Countdown Timer';
+    }
+
+    // Reset back to configured countdown duration
+    if (lblCountdownValue) {
+      const mins = selectedCountdownMinutes || 30;
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      const hStr = String(h).padStart(2, '0');
+      const mStr = String(m).padStart(2, '0');
+      const readable = h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+      lblCountdownValue.textContent = `${hStr}:${mStr}:00 (${readable})`;
+    }
+
+    if (btnLaunchCountdownTab) {
+      const mins = selectedCountdownMinutes || 30;
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      const readable = h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+      btnLaunchCountdownTab.textContent = `⏳ Launch Fullscreen Countdown (${readable})`;
+    }
   }
 
   // Update chip states, dynamically highlighting custom duration if added via +15m/etc.
@@ -245,45 +296,11 @@ function updateCountdownTabUI() {
       chipCustomCountdown.classList.remove('active');
     }
   }
-
-  if (countdownStatus.isActive && countdownStatus.endTime) {
-    activeCountdownBanner.style.display = 'flex';
-    const remainingMs = Math.max(0, countdownStatus.endTime - Date.now());
-    if (remainingMs > 0) {
-      const totalSec = Math.ceil(remainingMs / 1000);
-      const h = Math.floor(totalSec / 3600);
-      const m = Math.floor((totalSec % 3600) / 60);
-      const s = totalSec % 60;
-      const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-      const endDate = new Date(countdownStatus.endTime);
-      const endStr = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      if (txtCountdownBannerTitle) {
-        txtCountdownBannerTitle.textContent = `Countdown Active • Ends at ${endStr}`;
-      }
-      if (lblCountdownBannerTime) {
-        lblCountdownBannerTime.textContent = timeStr;
-      }
-    } else {
-      if (txtCountdownBannerTitle) txtCountdownBannerTitle.textContent = `Starting Screensaver...`;
-      if (lblCountdownBannerTime) lblCountdownBannerTime.textContent = '00:00:00';
-    }
-
-    if (btnLaunchCountdownTab) {
-      btnLaunchCountdownTab.textContent = '⏳ Reopen Fullscreen Countdown';
-    }
-  } else {
-    activeCountdownBanner.style.display = 'none';
-    if (btnLaunchCountdownTab) {
-      const h = Math.floor(selectedCountdownMinutes / 60);
-      const m = selectedCountdownMinutes % 60;
-      const readable = h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
-      btnLaunchCountdownTab.textContent = `⏳ Launch Fullscreen Countdown (${readable})`;
-    }
-  }
 }
 
 function updateBannerUI() {
+  const timerLabel = document.querySelector('#durationLiveTimer .timer-label');
+
   if (screensaverStatus.isOpen) {
     activeScreensaverBanner.style.display = 'flex';
     if (screensaverStatus.endTime) {
@@ -302,16 +319,34 @@ function updateBannerUI() {
           bannerCountdown.textContent = timeStr;
           bannerCountdown.style.display = 'block';
         }
+
+        // Live countdown ticking in duration box while screensaver is running!
+        if (lblDurationValue) {
+          lblDurationValue.textContent = `${timeStr} (Remaining)`;
+        }
+        if (timerLabel) {
+          timerLabel.textContent = 'Screensaver Running';
+        }
       } else {
         bannerText.textContent = `Screensaver closing...`;
         if (bannerCountdown) bannerCountdown.textContent = '00:00:00';
+        if (lblDurationValue) lblDurationValue.textContent = '00:00:00';
       }
     } else {
       bannerText.textContent = `Screensaver active (Unlimited)`;
       if (bannerCountdown) bannerCountdown.style.display = 'none';
+      if (lblDurationValue) lblDurationValue.textContent = '∞ (Unlimited)';
+      if (timerLabel) {
+        timerLabel.textContent = 'Screensaver Running';
+      }
     }
   } else {
     activeScreensaverBanner.style.display = 'none';
+    if (timerLabel) {
+      timerLabel.textContent = 'Duration Timer';
+    }
+    // When screensaver closes, immediately reset duration timer back to configured time!
+    renderDurationChips();
   }
 }
 
@@ -550,18 +585,7 @@ chkDurationLimit.addEventListener('change', (e) => {
 
 // Quick add buttons: +15m, +30m, +1h
 function handleQuickAdd(mins) {
-  const currentMins = currentExtConfig.enableDurationLimit
-    ? (currentExtConfig.durationMinutes || 0)
-    : 0;
-  const newMins = currentMins + mins;
-
-  saveExtConfig({
-    enableDurationLimit: true,
-    durationMode: 'duration',
-    durationMinutes: newMins,
-  });
-
-  // If screensaver is running, notify background to extend runtime directly
+  // If screensaver is running, notify background to extend current session only
   if (screensaverStatus.isOpen) {
     chrome.runtime.sendMessage({ action: 'extend_duration', additionalMinutes: mins }, (res) => {
       if (res && res.currentEndTime) {
@@ -569,9 +593,19 @@ function handleQuickAdd(mins) {
         updateBannerUI();
       }
     });
-  }
+  } else {
+    const currentMins = currentExtConfig.enableDurationLimit
+      ? (currentExtConfig.durationMinutes || 0)
+      : 0;
+    const newMins = Math.max(1, currentMins + mins);
 
-  renderDurationChips();
+    saveExtConfig({
+      enableDurationLimit: true,
+      durationMode: 'duration',
+      durationMinutes: newMins,
+    });
+    renderDurationChips();
+  }
 }
 
 btnQuickAdd15.addEventListener('click', () => handleQuickAdd(15));
@@ -603,19 +637,11 @@ durChips.forEach((chip) => {
     }
 
     const mins = parseInt(chip.dataset.min, 10);
-    // If clicking the currently active chip, toggle back to infinite
-    if (chip.classList.contains('active') && currentExtConfig.enableDurationLimit) {
-      saveExtConfig({
-        enableDurationLimit: false,
-        durationMinutes: 0,
-      });
-    } else {
-      saveExtConfig({
-        enableDurationLimit: true,
-        durationMode: 'duration',
-        durationMinutes: mins,
-      });
-    }
+    saveExtConfig({
+      enableDurationLimit: true,
+      durationMode: 'duration',
+      durationMinutes: mins,
+    });
     renderDurationChips();
   });
 });

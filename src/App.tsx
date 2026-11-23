@@ -55,19 +55,19 @@ export function App() {
   const [isControlsVisible, setIsControlsVisible] = useState(true);
   const [isCursorHidden, setIsCursorHidden] = useState(false);
 
-  // Tab mode state: 'countdown' (Split-flap Timer) or 'screensaver' (Clock)
+  // Tab mode state: 'screensaver' (Clock) or 'countdown' (Split-flap Timer)
   const [activeMode, setActiveMode] = useState<AppMode>(() => {
     if (typeof window !== 'undefined') {
       const p = new URLSearchParams(window.location.search);
       const tabParam = p.get('tab') || p.get('mode');
-      if (tabParam === 'screensaver' || tabParam === 'clock') {
-        return 'screensaver';
-      }
       if (tabParam === 'countdown' || tabParam === 'timer') {
         return 'countdown';
       }
+      if (tabParam === 'screensaver' || tabParam === 'clock') {
+        return 'screensaver';
+      }
     }
-    return 'countdown';
+    return 'screensaver';
   });
 
   const idleTimerRef = useRef<number | null>(null);
@@ -432,17 +432,6 @@ export function App() {
         >
           <button
             type="button"
-            className={`mode-tab-btn ${activeMode === 'countdown' ? 'active' : ''}`}
-            onClick={() => setActiveMode('countdown')}
-            role="tab"
-            aria-selected={activeMode === 'countdown'}
-            title="Split-Flap Countdown Timer (Press C to switch)"
-          >
-            <Hourglass size={15} aria-hidden="true" />
-            <span>Countdown</span>
-          </button>
-          <button
-            type="button"
             className={`mode-tab-btn ${activeMode === 'screensaver' ? 'active' : ''}`}
             onClick={() => setActiveMode('screensaver')}
             role="tab"
@@ -451,6 +440,17 @@ export function App() {
           >
             <Clock size={15} aria-hidden="true" />
             <span>Screensaver</span>
+          </button>
+          <button
+            type="button"
+            className={`mode-tab-btn ${activeMode === 'countdown' ? 'active' : ''}`}
+            onClick={() => setActiveMode('countdown')}
+            role="tab"
+            aria-selected={activeMode === 'countdown'}
+            title="Split-Flap Countdown Timer (Press C to switch)"
+          >
+            <Hourglass size={15} aria-hidden="true" />
+            <span>Countdown</span>
           </button>
         </nav>
       )}
