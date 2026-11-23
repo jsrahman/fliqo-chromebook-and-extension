@@ -30,8 +30,8 @@ const PRECACHE_ASSETS = [
   './fonts/Ubuntu-500.woff2',
   './fonts/Ubuntu-700.woff2',
   './fonts/Ubuntu-Bold.woff2',
-  './assets/index-CeSjaEHn.css',
-  './assets/index-DTFg4LtC.js',
+  './assets/index-B1UKSg4m.css',
+  './assets/index-DRRRypNk.js',
 ];
 
 // Install: precache all core application shell assets and activate immediately
