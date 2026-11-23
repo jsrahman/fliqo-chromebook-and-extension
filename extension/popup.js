@@ -40,6 +40,8 @@ const DEFAULT_EXT_CONFIG = {
 let currentClockSettings = { ...DEFAULT_CLOCK_SETTINGS };
 let currentExtConfig = { ...DEFAULT_EXT_CONFIG };
 let screensaverStatus = { isOpen: false, endTime: null };
+let countdownStatus = { isActive: false, endTime: null, durationMinutes: 30 };
+let selectedCountdownMinutes = 30;
 let statusPollTimer = null;
 
 // DOM Elements: Navigation Tabs
@@ -48,16 +50,32 @@ const tabPanes = document.querySelectorAll('.tab-pane');
 
 // DOM Elements: Header & Quick Actions
 const btnLaunch = document.getElementById('btnLaunch');
-const btnLaunchCountdown = document.getElementById('btnLaunchCountdown');
 const btnLaunchLarge = document.getElementById('btnLaunchLarge');
 const btnLaunchCountdownLarge = document.getElementById('btnLaunchCountdownLarge');
 
-// DOM Elements: Duration & Keep Awake (Tab 1)
+// DOM Elements: Countdown in Tab (Tab 1)
+const activeCountdownBanner = document.getElementById('activeCountdownBanner');
+const txtCountdownBannerTitle = document.getElementById('txtCountdownBannerTitle');
+const lblCountdownBannerTime = document.getElementById('lblCountdownBannerTime');
+const btnReopenCountdownTab = document.getElementById('btnReopenCountdownTab');
+const btnStopCountdown = document.getElementById('btnStopCountdown');
+const btnQuickAddCountdown15 = document.getElementById('btnQuickAddCountdown15');
+const btnQuickAddCountdown30 = document.getElementById('btnQuickAddCountdown30');
+const btnQuickAddCountdown60 = document.getElementById('btnQuickAddCountdown60');
+const countdownChips = document.querySelectorAll('.countdown-chip');
+const chipCustomCountdown = document.getElementById('chipCustomCountdown');
+const lblCountdownValue = document.getElementById('lblCountdownValue');
+const chkAutoStartScreensaver = document.getElementById('chkAutoStartScreensaver');
+const btnLaunchCountdownTab = document.getElementById('btnLaunchCountdownTab');
+
+// DOM Elements: Duration & Keep Awake (Tab 2)
 const chkDurationLimit = document.getElementById('chkDurationLimit');
 const btnQuickAdd15 = document.getElementById('btnQuickAdd15');
 const btnQuickAdd30 = document.getElementById('btnQuickAdd30');
 const btnQuickAdd60 = document.getElementById('btnQuickAdd60');
-const durChips = document.querySelectorAll('.dur-chip');
+const durChips = document.querySelectorAll('.dur-chip:not(.countdown-chip)');
+const chipCustomDuration = document.getElementById('chipCustomDuration');
+const lblDurationValue = document.getElementById('lblDurationValue');
 const chipUntil = document.getElementById('chipUntil');
 const untilTimeRow = document.getElementById('untilTimeRow');
 const inpUntilTime = document.getElementById('inpUntilTime');
@@ -162,23 +180,106 @@ chrome.storage.sync.get([CLOCK_STORAGE_KEY, EXT_CONFIG_KEY], (res) => {
   pollScreensaverStatus();
 });
 
-// Polling screensaver active status
+// Polling screensaver & countdown active status
 function pollScreensaverStatus() {
-  chrome.runtime.sendMessage({ action: 'get_screensaver_status' }, (res) => {
-    if (chrome.runtime.lastError || !res) return;
-    screensaverStatus = res;
-    updateBannerUI();
-  });
+  const checkStatus = () => {
+    chrome.runtime.sendMessage({ action: 'get_screensaver_status' }, (res) => {
+      if (!chrome.runtime.lastError && res) {
+        screensaverStatus = res;
+        updateBannerUI();
+      }
+    });
+
+    chrome.runtime.sendMessage({ action: 'get_countdown_status' }, (res) => {
+      if (!chrome.runtime.lastError && res) {
+        countdownStatus = res;
+        updateCountdownTabUI();
+      }
+    });
+  };
+
+  checkStatus();
 
   if (!statusPollTimer) {
-    statusPollTimer = setInterval(() => {
-      chrome.runtime.sendMessage({ action: 'get_screensaver_status' }, (res) => {
-        if (!chrome.runtime.lastError && res) {
-          screensaverStatus = res;
-        }
-        updateBannerUI();
-      });
-    }, 1000);
+    statusPollTimer = setInterval(checkStatus, 1000);
+  }
+}
+
+function updateCountdownTabUI() {
+  if (!activeCountdownBanner) return;
+
+  // Update live countdown readout in duration box
+  if (lblCountdownValue) {
+    const mins = selectedCountdownMinutes || 30;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    const hStr = String(h).padStart(2, '0');
+    const mStr = String(m).padStart(2, '0');
+    const readable = h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+    lblCountdownValue.textContent = `${hStr}:${mStr}:00 (${readable})`;
+  }
+
+  // Update chip states, dynamically highlighting custom duration if added via +15m/etc.
+  let matchedCountdownPreset = false;
+  countdownChips.forEach((chip) => {
+    if (chip.id === 'chipCustomCountdown') return;
+    const chipMin = parseInt(chip.dataset.min, 10);
+    if (chipMin === selectedCountdownMinutes) {
+      chip.classList.add('active');
+      matchedCountdownPreset = true;
+    } else {
+      chip.classList.remove('active');
+    }
+  });
+
+  if (chipCustomCountdown) {
+    if (!matchedCountdownPreset && selectedCountdownMinutes > 0) {
+      chipCustomCountdown.style.display = 'block';
+      chipCustomCountdown.classList.add('active');
+      chipCustomCountdown.dataset.min = String(selectedCountdownMinutes);
+      const h = Math.floor(selectedCountdownMinutes / 60);
+      const m = selectedCountdownMinutes % 60;
+      chipCustomCountdown.textContent = h > 0 ? (m > 0 ? `${h}h${m}m` : `${h}h`) : `${m}m`;
+    } else {
+      chipCustomCountdown.style.display = 'none';
+      chipCustomCountdown.classList.remove('active');
+    }
+  }
+
+  if (countdownStatus.isActive && countdownStatus.endTime) {
+    activeCountdownBanner.style.display = 'flex';
+    const remainingMs = Math.max(0, countdownStatus.endTime - Date.now());
+    if (remainingMs > 0) {
+      const totalSec = Math.ceil(remainingMs / 1000);
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      const endDate = new Date(countdownStatus.endTime);
+      const endStr = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      if (txtCountdownBannerTitle) {
+        txtCountdownBannerTitle.textContent = `Countdown Active • Ends at ${endStr}`;
+      }
+      if (lblCountdownBannerTime) {
+        lblCountdownBannerTime.textContent = timeStr;
+      }
+    } else {
+      if (txtCountdownBannerTitle) txtCountdownBannerTitle.textContent = `Starting Screensaver...`;
+      if (lblCountdownBannerTime) lblCountdownBannerTime.textContent = '00:00:00';
+    }
+
+    if (btnLaunchCountdownTab) {
+      btnLaunchCountdownTab.textContent = '⏳ Reopen Fullscreen Countdown';
+    }
+  } else {
+    activeCountdownBanner.style.display = 'none';
+    if (btnLaunchCountdownTab) {
+      const h = Math.floor(selectedCountdownMinutes / 60);
+      const m = selectedCountdownMinutes % 60;
+      const readable = h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+      btnLaunchCountdownTab.textContent = `⏳ Launch Fullscreen Countdown (${readable})`;
+    }
   }
 }
 
@@ -303,7 +404,9 @@ function renderDurationChips() {
   const mins = currentExtConfig.durationMinutes || 0;
   const until = currentExtConfig.untilTime || '';
 
+  let matchedPreset = false;
   durChips.forEach((chip) => {
+    if (chip.id === 'chipCustomDuration') return;
     chip.classList.remove('active');
 
     if (!isLimitEnabled) {
@@ -320,9 +423,41 @@ function renderDurationChips() {
       const chipMin = parseInt(chip.dataset.min, 10);
       if (chipMin === mins) {
         chip.classList.add('active');
+        matchedPreset = true;
       }
     }
   });
+
+  // Dynamically display custom chip if duration was adjusted with +15m/+30m/+1h
+  if (chipCustomDuration) {
+    if (isLimitEnabled && mode === 'duration' && !matchedPreset && mins > 0) {
+      chipCustomDuration.style.display = 'block';
+      chipCustomDuration.classList.add('active');
+      chipCustomDuration.dataset.min = String(mins);
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      chipCustomDuration.textContent = h > 0 ? (m > 0 ? `${h}h${m}m` : `${h}h`) : `${m}m`;
+    } else {
+      chipCustomDuration.style.display = 'none';
+      chipCustomDuration.classList.remove('active');
+    }
+  }
+
+  // Live timer readout in duration box
+  if (lblDurationValue) {
+    if (!isLimitEnabled) {
+      lblDurationValue.textContent = '∞ (Until activity)';
+    } else if (mode === 'until') {
+      lblDurationValue.textContent = until ? `Until ${until}` : 'Until...';
+    } else {
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      const hStr = String(h).padStart(2, '0');
+      const mStr = String(m).padStart(2, '0');
+      const readable = h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+      lblDurationValue.textContent = `${hStr}:${mStr}:00 (${readable})`;
+    }
+  }
 
   if (isLimitEnabled && mode === 'until') {
     untilTimeRow.style.display = 'flex';
@@ -536,25 +671,74 @@ const triggerLaunch = () => {
 btnLaunch.addEventListener('click', triggerLaunch);
 btnLaunchLarge.addEventListener('click', triggerLaunch);
 
-// Launch Countdown Timer Now
-const triggerLaunchCountdown = () => {
-  chrome.runtime.sendMessage({ action: 'launch_countdown_tab' }, () => {
-    window.close();
-  });
-};
-if (btnLaunchCountdown) btnLaunchCountdown.addEventListener('click', triggerLaunchCountdown);
-if (btnLaunchCountdownLarge) btnLaunchCountdownLarge.addEventListener('click', triggerLaunchCountdown);
-
-const btnLaunchCountdownTab = document.getElementById('btnLaunchCountdownTab');
-if (btnLaunchCountdownTab) btnLaunchCountdownTab.addEventListener('click', triggerLaunchCountdown);
-
-const countdownChips = document.querySelectorAll('.countdown-chip');
+// Countdown Tab Duration Chips
 countdownChips.forEach((chip) => {
   chip.addEventListener('click', () => {
     countdownChips.forEach((c) => c.classList.remove('active'));
     chip.classList.add('active');
+    selectedCountdownMinutes = parseInt(chip.dataset.min, 10) || 30;
+    updateCountdownTabUI();
   });
 });
+
+// Quick add in Countdown Tab
+function handleQuickAddCountdown(mins) {
+  selectedCountdownMinutes = (selectedCountdownMinutes || 30) + mins;
+  if (countdownStatus.isActive) {
+    chrome.runtime.sendMessage({ action: 'extend_countdown', additionalMinutes: mins }, (res) => {
+      if (res && res.currentEndTime) {
+        countdownStatus.endTime = res.currentEndTime;
+        updateCountdownTabUI();
+      }
+    });
+  }
+  updateCountdownTabUI();
+}
+
+if (btnQuickAddCountdown15) btnQuickAddCountdown15.addEventListener('click', () => handleQuickAddCountdown(15));
+if (btnQuickAddCountdown30) btnQuickAddCountdown30.addEventListener('click', () => handleQuickAddCountdown(30));
+if (btnQuickAddCountdown60) btnQuickAddCountdown60.addEventListener('click', () => handleQuickAddCountdown(60));
+
+// Launch Countdown in Tab
+const triggerLaunchCountdownInTab = () => {
+  if (countdownStatus.isActive) {
+    chrome.runtime.sendMessage({ action: 'reopen_countdown_tab' }, () => {
+      window.close();
+    });
+  } else {
+    const autoStart = chkAutoStartScreensaver ? chkAutoStartScreensaver.checked : true;
+    chrome.runtime.sendMessage({
+      action: 'launch_countdown',
+      durationMinutes: selectedCountdownMinutes,
+      autoStartScreensaver: autoStart,
+    }, (res) => {
+      if (res && res.endTime) {
+        countdownStatus = { isActive: true, endTime: res.endTime, durationMinutes: selectedCountdownMinutes };
+      }
+      window.close();
+    });
+  }
+};
+
+if (btnLaunchCountdownTab) btnLaunchCountdownTab.addEventListener('click', triggerLaunchCountdownInTab);
+if (btnLaunchCountdownLarge) btnLaunchCountdownLarge.addEventListener('click', triggerLaunchCountdownInTab);
+
+if (btnReopenCountdownTab) {
+  btnReopenCountdownTab.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ action: 'reopen_countdown_tab' }, () => {
+      window.close();
+    });
+  });
+}
+
+if (btnStopCountdown) {
+  btnStopCountdown.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ action: 'stop_countdown' }, () => {
+      countdownStatus = { isActive: false, endTime: null, durationMinutes: selectedCountdownMinutes };
+      updateCountdownTabUI();
+    });
+  });
+}
 
 // =============================================================================
 // EVENT LISTENERS: EXCLUDED WEBSITES (TAB 2)

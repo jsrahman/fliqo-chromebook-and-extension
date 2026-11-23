@@ -50,16 +50,41 @@ test('App.tsx provides keyboard toggle shortcut C', () => {
   assert(appTsx.includes("e.key === 'c'") || appTsx.includes("e.key === 'C'"), 'Must support C key shortcut');
 });
 
-test('FlipCountdown renders matching split-flap UI (hours, minutes, seconds)', () => {
+test('FlipCountdown renders 2 flip clocks for minutes/seconds, and 3 flip clocks when hours come', () => {
   assert(flipCountdownTsx.includes('flip-clock flip-countdown'), 'Must use flip-clock container');
-  assert(flipCountdownTsx.includes('FlipUnit'), 'Must use FlipUnit split-flap cards');
-  assert(flipCountdownTsx.includes('hourDisplay'), 'Must display hours');
+  assert(flipCountdownTsx.includes('hours > 0 &&'), 'Hours flip unit must be conditional on hours > 0');
   assert(flipCountdownTsx.includes('minuteDisplay'), 'Must display minutes');
   assert(flipCountdownTsx.includes('secondDisplay'), 'Must display seconds');
 });
 
-test('FlipCountdown defaults to 2 hours (120 minutes = 7200 seconds)', () => {
-  assert(flipCountdownTsx.includes('120 * 60'), 'Default countdown duration must be 2 hours (120 * 60 = 7200s)');
+test('popup.html removed description paragraph and shortcuts box from countdown tab', () => {
+  assert(!popupHtml.includes('Launch split-flap countdown in fullscreen. Moving the mouse closes the window'), 'Must remove description paragraph');
+  assert(!popupHtml.includes('Keyboard & Gesture Controls') && !popupHtml.includes('Keyboard &amp; Gesture Controls'), 'Must remove shortcuts box from countdown tab');
+});
+
+test('popup.html and popup.js provide live timer readouts and dynamic custom chips in duration boxes', () => {
+  assert(popupHtml.includes('id="durationLiveTimer"'), 'Must have durationLiveTimer in screensaver tab');
+  assert(popupHtml.includes('id="countdownLiveTimer"'), 'Must have countdownLiveTimer in countdown tab');
+  assert(popupHtml.includes('id="lblDurationValue"'), 'Must have lblDurationValue');
+  assert(popupHtml.includes('id="lblCountdownValue"'), 'Must have lblCountdownValue');
+  assert(popupHtml.includes('id="chipCustomDuration"'), 'Must have chipCustomDuration for custom duration');
+  assert(popupHtml.includes('id="chipCustomCountdown"'), 'Must have chipCustomCountdown for custom countdown');
+  assert(popupJs.includes('chipCustomDuration'), 'popup.js must handle chipCustomDuration');
+  assert(popupJs.includes('chipCustomCountdown'), 'popup.js must handle chipCustomCountdown');
+});
+
+test('extension/background.js supports extend_countdown message', () => {
+  assert(bgJs.includes("message.action === 'extend_countdown'"), 'Must handle extend_countdown');
+});
+
+test('FlipCountdown defaults to 30 minutes (30 * 60 = 1800 seconds)', () => {
+  assert(flipCountdownTsx.includes('30 * 60'), 'Default countdown duration must be 30 minutes (30 * 60 = 1800s)');
+});
+
+test('popup.html and FlipCountdown default countdown to 30 minutes', () => {
+  assert(popupHtml.includes('class="dur-chip countdown-chip active" data-min="30"'), 'Countdown 30m chip must be active by default');
+  assert(popupJs.includes('selectedCountdownMinutes = 30'), 'selectedCountdownMinutes must be 30 by default');
+  assert(bgJs.includes('message.durationMinutes || 30'), 'background.js must default countdown to 30 min');
 });
 
 test('FlipCountdown triggers onComplete to start screensaver when countdown reaches zero', () => {
@@ -85,10 +110,26 @@ test('extension JS files background.js and popup.js have zero syntax errors', ()
   execSync('node -c extension/popup.js', { stdio: 'pipe' });
 });
 
-test('extension/popup.html has dedicated Countdown tab', () => {
+test('extension/popup.html has Countdown as the FIRST tab button and active tab-pane', () => {
   assert(popupHtml.includes('data-tab="countdown"'), 'popup.html must have data-tab="countdown"');
   assert(popupHtml.includes('id="tabContent-countdown"'), 'popup.html must have id="tabContent-countdown"');
   assert(popupHtml.includes('btnLaunchCountdownTab'), 'popup.html must have btnLaunchCountdownTab');
+  
+  // Verify countdown is the first tab-pane and active
+  const countdownPaneIdx = popupHtml.indexOf('id="tabContent-countdown"');
+  const timerPaneIdx = popupHtml.indexOf('id="tabContent-timer"');
+  assert(countdownPaneIdx !== -1 && timerPaneIdx !== -1 && countdownPaneIdx < timerPaneIdx, 'tabContent-countdown must appear before tabContent-timer');
+  assert(popupHtml.includes('id="tabContent-countdown" class="tab-pane active"'), 'tabContent-countdown must be active by default');
+  
+  // Verify countdown button is first in tabs-nav-bar
+  const countdownBtnIdx = popupHtml.indexOf('data-tab="countdown"');
+  const timerBtnIdx = popupHtml.indexOf('data-tab="timer"');
+  assert(countdownBtnIdx !== -1 && timerBtnIdx !== -1 && countdownBtnIdx < timerBtnIdx, 'Countdown tab button must precede timer tab button');
+});
+
+test('extension/background.js launches countdown in fullscreen window by default', () => {
+  assert(bgJs.includes("state: 'fullscreen'"), 'Must launch with state: fullscreen');
+  assert(bgJs.includes("countdownWindowId"), 'Must manage countdownWindowId');
 });
 
 test('extension/background.js defaults duration limit to enabled and 120 minutes (2h)', () => {
@@ -114,7 +155,7 @@ test('extension/background.js persists screensaverWindowId and closes window on 
 });
 
 test('extension/background.js updates extension action badge with live countdown', () => {
-  assert(bgJs.includes('updateCountdownBadge'), 'Must have updateCountdownBadge function');
+  assert(bgJs.includes('updateCountdownBadge') || bgJs.includes('updateExtensionBadge'), 'Must have badge update function');
   assert(bgJs.includes('chrome.action.setBadgeText'), 'Must update toolbar badge text');
   assert(bgJs.includes('chrome.action.setBadgeBackgroundColor'), 'Must set badge background color');
 });
@@ -123,6 +164,30 @@ test('extension/popup.html and popup.js provide live countdown display when scre
   assert(popupHtml.includes('id="bannerCountdown"'), 'popup.html must have bannerCountdown element');
   assert(popupJs.includes('bannerCountdown.textContent = timeStr'), 'popup.js must update live countdown ticker');
   assert(popupCss.includes('.banner-countdown'), 'popup.css must style banner countdown');
+});
+
+test('popup.html header does not contain redundant countdown button and has clean header actions', () => {
+  assert(!popupHtml.includes('id="btnLaunchCountdown"'), 'popup.html must remove btnLaunchCountdown from header');
+  assert(popupHtml.includes('id="btnLaunch"'), 'popup.html must keep btnLaunch in header');
+});
+
+test('App.tsx handles isExtensionCountdown and closes tab on mouse activity', () => {
+  assert(appTsx.includes('isExtensionCountdown'), 'App.tsx must support isExtensionCountdown');
+  assert(appTsx.includes('closeCountdownTab'), 'App.tsx must define closeCountdownTab');
+  assert(appTsx.includes('handleCountdownActivity'), 'App.tsx must have handleCountdownActivity listener');
+});
+
+test('extension/background.js supports countdown lifecycle messages', () => {
+  assert(bgJs.includes("message.action === 'launch_countdown'"), 'Must handle launch_countdown');
+  assert(bgJs.includes("message.action === 'close_countdown_tab'"), 'Must handle close_countdown_tab');
+  assert(bgJs.includes("message.action === 'reopen_countdown_tab'"), 'Must handle reopen_countdown_tab');
+  assert(bgJs.includes("message.action === 'stop_countdown'"), 'Must handle stop_countdown');
+  assert(bgJs.includes("countdown_finish_alarm"), 'Must have countdown_finish_alarm');
+});
+
+test('FlipCountdown initializes from URL endTime and duration parameters', () => {
+  assert(flipCountdownTsx.includes('endTimeParam'), 'FlipCountdown must read endTimeParam');
+  assert(flipCountdownTsx.includes('durationParam'), 'FlipCountdown must read durationParam');
 });
 
 test('App.tsx monitors screensaverEndTime and auto-closes when duration expires', () => {

@@ -8,6 +8,9 @@ let screensaverWindowId = null;
 let previousFocusedWindowId = null;
 let screensaverTimer = null;
 let currentEndTime = null;
+let countdownWindowId = null;
+let countdownTabId = null;
+let countdownEndTime = null;
 
 const DEFAULT_EXT_CONFIG = {
   idleTimeoutMinutes: 5,
@@ -131,12 +134,14 @@ chrome.idle.onStateChanged.addListener(async (newState) => {
 });
 
 // Update the extension badge on the browser toolbar with live countdown
-function updateCountdownBadge(endTime) {
-  if (!endTime) {
+async function updateExtensionBadge() {
+  const data = await chrome.storage.local.get(['countdownEndTime', 'screensaverEndTime']);
+  const targetEndTime = data.countdownEndTime || data.screensaverEndTime;
+  if (!targetEndTime) {
     chrome.action.setBadgeText({ text: '' });
     return;
   }
-  const remainingMs = endTime - Date.now();
+  const remainingMs = targetEndTime - Date.now();
   if (remainingMs <= 0) {
     chrome.action.setBadgeText({ text: '' });
     return;
@@ -154,8 +159,9 @@ function updateCountdownBadge(endTime) {
     badgeStr = `${totalMinutes}m`;
   }
   chrome.action.setBadgeText({ text: badgeStr });
-  chrome.action.setBadgeBackgroundColor({ color: '#ff6b35' });
+  chrome.action.setBadgeBackgroundColor({ color: data.countdownEndTime ? '#ff6b35' : '#2563eb' });
 }
+const updateCountdownBadge = updateExtensionBadge;
 
 // Schedule screensaver auto-close based on duration setting
 function scheduleAutoClose(config) {
@@ -184,7 +190,7 @@ function scheduleAutoClose(config) {
   if (ms > 0) {
     currentEndTime = Date.now() + ms;
     chrome.storage.local.set({ screensaverEndTime: currentEndTime });
-    updateCountdownBadge(currentEndTime);
+    updateExtensionBadge();
 
     screensaverTimer = setTimeout(() => {
       console.log('[Fliqlo] Screensaver display duration reached. Auto-closing.');
@@ -196,7 +202,7 @@ function scheduleAutoClose(config) {
   }
 }
 
-function clearAutoCloseTimer() {
+async function clearAutoCloseTimer() {
   if (screensaverTimer) {
     clearTimeout(screensaverTimer);
     screensaverTimer = null;
@@ -204,19 +210,37 @@ function clearAutoCloseTimer() {
   currentEndTime = null;
   chrome.alarms.clear('screensaver_close_alarm');
   chrome.alarms.clear('screensaver_badge_alarm');
-  chrome.storage.local.remove(['screensaverEndTime', 'screensaverWindowId']);
-  chrome.action.setBadgeText({ text: '' });
+  await chrome.storage.local.remove(['screensaverEndTime', 'screensaverWindowId']);
+  await updateExtensionBadge();
 }
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'screensaver_close_alarm') {
     closeScreensaver();
-  } else if (alarm.name === 'screensaver_badge_alarm') {
-    const data = await chrome.storage.local.get(['screensaverEndTime']);
-    if (data.screensaverEndTime) {
-      updateCountdownBadge(data.screensaverEndTime);
-    } else {
-      chrome.action.setBadgeText({ text: '' });
+  } else if (alarm.name === 'screensaver_badge_alarm' || alarm.name === 'countdown_badge_alarm') {
+    await updateExtensionBadge();
+  } else if (alarm.name === 'countdown_finish_alarm') {
+    const data = await chrome.storage.local.get(['autoStartScreensaverOnCountdown', 'countdownWindowId', 'countdownTabId']);
+    if (data.countdownWindowId) {
+      chrome.windows.remove(data.countdownWindowId).catch(() => {});
+    }
+    if (data.countdownTabId) {
+      chrome.tabs.remove(data.countdownTabId).catch(() => {});
+    }
+    countdownEndTime = null;
+    countdownWindowId = null;
+    countdownTabId = null;
+    chrome.alarms.clear('countdown_finish_alarm');
+    chrome.alarms.clear('countdown_badge_alarm');
+    await chrome.storage.local.remove(['countdownEndTime', 'countdownDurationMinutes', 'countdownWindowId', 'countdownTabId']);
+    await updateExtensionBadge();
+
+    // When countdown completes, automatically launch screensaver
+    if (data.autoStartScreensaverOnCountdown !== false) {
+      chrome.storage.sync.get([EXT_CONFIG_KEY], (res) => {
+        const config = res[EXT_CONFIG_KEY] || DEFAULT_EXT_CONFIG;
+        launchScreensaver(config);
+      });
     }
   }
 });
@@ -292,15 +316,20 @@ async function closeScreensaver() {
 
 // Handle window close events
 chrome.windows.onRemoved.addListener(async (windowId) => {
-  const data = await chrome.storage.local.get(['screensaverWindowId']);
+  const data = await chrome.storage.local.get(['screensaverWindowId', 'countdownWindowId']);
   if (windowId === screensaverWindowId || windowId === data.screensaverWindowId) {
     screensaverWindowId = null;
     clearAutoCloseTimer();
     chrome.power.releaseKeepAwake();
   }
+  if (windowId === countdownWindowId || windowId === data.countdownWindowId) {
+    countdownWindowId = null;
+    await chrome.storage.local.remove(['countdownWindowId', 'countdownTabId']);
+    await updateExtensionBadge();
+  }
 });
 
-// Ensure screensaver window is ALWAYS fullscreen in the extension
+// Ensure screensaver and countdown windows are ALWAYS fullscreen in the extension
 chrome.windows.onBoundsChanged.addListener(async (win) => {
   if (win.id === screensaverWindowId && win.state !== 'fullscreen') {
     try {
@@ -308,6 +337,23 @@ chrome.windows.onBoundsChanged.addListener(async (win) => {
     } catch {
       // ignore
     }
+  }
+  if (win.id === countdownWindowId && win.state !== 'fullscreen') {
+    try {
+      await chrome.windows.update(countdownWindowId, { state: 'fullscreen', focused: true });
+    } catch {
+      // ignore
+    }
+  }
+});
+
+// Handle tab close events (fallback)
+chrome.tabs.onRemoved.addListener(async (tabId) => {
+  const data = await chrome.storage.local.get(['countdownTabId']);
+  if (tabId === countdownTabId || tabId === data.countdownTabId) {
+    countdownTabId = null;
+    await chrome.storage.local.remove(['countdownTabId']);
+    await updateExtensionBadge();
   }
 });
 
@@ -326,20 +372,43 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   } else if (message.action === 'extend_duration') {
     const addMinutes = message.additionalMinutes || 15;
-    if (currentEndTime) {
-      currentEndTime += addMinutes * 60 * 1000;
-      clearTimeout(screensaverTimer);
-      const remainingMs = currentEndTime - Date.now();
-      if (remainingMs > 0) {
-        screensaverTimer = setTimeout(() => {
-          closeScreensaver();
-        }, remainingMs);
-        chrome.alarms.create('screensaver_close_alarm', { when: currentEndTime });
-        chrome.storage.local.set({ screensaverEndTime: currentEndTime });
-        updateCountdownBadge(currentEndTime);
+    chrome.storage.local.get(['screensaverEndTime'], (data) => {
+      let endTime = currentEndTime || data.screensaverEndTime;
+      if (endTime && endTime > Date.now()) {
+        endTime += addMinutes * 60 * 1000;
+        currentEndTime = endTime;
+        clearTimeout(screensaverTimer);
+        const remainingMs = currentEndTime - Date.now();
+        if (remainingMs > 0) {
+          screensaverTimer = setTimeout(() => {
+            closeScreensaver();
+          }, remainingMs);
+          chrome.alarms.create('screensaver_close_alarm', { when: currentEndTime });
+          chrome.storage.local.set({ screensaverEndTime: currentEndTime });
+          updateExtensionBadge();
+        }
+        sendResponse({ status: 'ok', currentEndTime: endTime });
+      } else {
+        sendResponse({ status: 'not_running' });
       }
-    }
-    sendResponse({ status: 'ok', currentEndTime });
+    });
+    return true;
+  } else if (message.action === 'extend_countdown') {
+    const addMinutes = message.additionalMinutes || 15;
+    chrome.storage.local.get(['countdownEndTime', 'countdownDurationMinutes'], (data) => {
+      let endTime = countdownEndTime || data.countdownEndTime;
+      if (endTime && endTime > Date.now()) {
+        endTime += addMinutes * 60 * 1000;
+        countdownEndTime = endTime;
+        const newMins = (data.countdownDurationMinutes || 30) + addMinutes;
+        chrome.storage.local.set({ countdownEndTime: endTime, countdownDurationMinutes: newMins });
+        chrome.alarms.create('countdown_finish_alarm', { when: countdownEndTime });
+        updateExtensionBadge();
+        sendResponse({ status: 'ok', currentEndTime: endTime });
+      } else {
+        sendResponse({ status: 'not_running' });
+      }
+    });
     return true;
   } else if (message.action === 'get_screensaver_status') {
     chrome.storage.local.get(['screensaverWindowId', 'screensaverEndTime'], (data) => {
@@ -360,6 +429,136 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       } else {
         sendResponse({ isOpen: false, endTime: null });
       }
+    });
+    return true;
+  } else if (message.action === 'launch_countdown') {
+    const mins = message.durationMinutes || 30; // default 30 min
+    const autoScreensaver = message.autoStartScreensaver !== false;
+    const durationMs = mins * 60 * 1000;
+    countdownEndTime = Date.now() + durationMs;
+
+    chrome.storage.local.set({
+      countdownEndTime,
+      countdownDurationMinutes: mins,
+      autoStartScreensaverOnCountdown: autoScreensaver,
+    });
+
+    updateExtensionBadge();
+    chrome.alarms.create('countdown_finish_alarm', { when: countdownEndTime });
+    chrome.alarms.create('countdown_badge_alarm', { periodInMinutes: 1 });
+
+    chrome.windows.create({
+      url: chrome.runtime.getURL(`app/index.html?mode=countdown&duration=${mins}&endTime=${countdownEndTime}`),
+      type: 'popup',
+      state: 'fullscreen',
+      focused: true,
+    }, (win) => {
+      countdownWindowId = win.id;
+      if (win.tabs && win.tabs.length > 0) {
+        countdownTabId = win.tabs[0].id;
+      }
+      chrome.storage.local.set({
+        countdownWindowId: win.id,
+        countdownTabId: countdownTabId || null,
+      });
+
+      // Enforce fullscreen display
+      setTimeout(() => {
+        try {
+          if (countdownWindowId) {
+            chrome.windows.update(countdownWindowId, { state: 'fullscreen', focused: true });
+          }
+        } catch {}
+      }, 150);
+    });
+
+    sendResponse({ status: 'ok', endTime: countdownEndTime });
+    return true;
+  } else if (message.action === 'close_countdown_tab') {
+    chrome.storage.local.get(['countdownWindowId', 'countdownTabId'], (data) => {
+      const winId = countdownWindowId || data.countdownWindowId;
+      const tabId = (sender && sender.tab && sender.tab.id) || countdownTabId || data.countdownTabId;
+      if (winId) {
+        chrome.windows.remove(winId).catch(() => {});
+      }
+      if (tabId && (!winId || tabId !== winId)) {
+        chrome.tabs.remove(tabId).catch(() => {});
+      }
+      countdownWindowId = null;
+      countdownTabId = null;
+      chrome.storage.local.remove(['countdownWindowId', 'countdownTabId']);
+      updateExtensionBadge();
+      sendResponse({ status: 'ok' });
+    });
+    return true;
+  } else if (message.action === 'reopen_countdown_tab') {
+    chrome.storage.local.get(['countdownEndTime', 'countdownDurationMinutes'], (data) => {
+      const endTime = data.countdownEndTime || countdownEndTime;
+      const mins = data.countdownDurationMinutes || 30;
+      if (endTime && endTime > Date.now()) {
+        chrome.windows.create({
+          url: chrome.runtime.getURL(`app/index.html?mode=countdown&duration=${mins}&endTime=${endTime}`),
+          type: 'popup',
+          state: 'fullscreen',
+          focused: true,
+        }, (win) => {
+          countdownWindowId = win.id;
+          if (win.tabs && win.tabs.length > 0) {
+            countdownTabId = win.tabs[0].id;
+          }
+          chrome.storage.local.set({
+            countdownWindowId: win.id,
+            countdownTabId: countdownTabId || null,
+          });
+
+          setTimeout(() => {
+            try {
+              if (countdownWindowId) {
+                chrome.windows.update(countdownWindowId, { state: 'fullscreen', focused: true });
+              }
+            } catch {}
+          }, 150);
+        });
+        sendResponse({ status: 'ok' });
+      } else {
+        sendResponse({ status: 'not_running' });
+      }
+    });
+    return true;
+  } else if (message.action === 'stop_countdown') {
+    chrome.storage.local.get(['countdownWindowId', 'countdownTabId'], (data) => {
+      const winId = countdownWindowId || data.countdownWindowId;
+      const tabId = data.countdownTabId || countdownTabId;
+      if (winId) {
+        chrome.windows.remove(winId).catch(() => {});
+      }
+      if (tabId && (!winId || tabId !== winId)) {
+        chrome.tabs.remove(tabId).catch(() => {});
+      }
+      countdownEndTime = null;
+      countdownWindowId = null;
+      countdownTabId = null;
+      chrome.alarms.clear('countdown_finish_alarm');
+      chrome.alarms.clear('countdown_badge_alarm');
+      chrome.storage.local.remove(
+        ['countdownEndTime', 'countdownDurationMinutes', 'countdownWindowId', 'countdownTabId', 'autoStartScreensaverOnCountdown'],
+        () => {
+          updateExtensionBadge();
+          sendResponse({ status: 'ok' });
+        }
+      );
+    });
+    return true;
+  } else if (message.action === 'get_countdown_status') {
+    chrome.storage.local.get(['countdownEndTime', 'countdownDurationMinutes', 'countdownWindowId', 'countdownTabId'], (data) => {
+      const endTime = data.countdownEndTime || countdownEndTime;
+      const active = !!(endTime && endTime > Date.now());
+      sendResponse({
+        isActive: active,
+        endTime: active ? endTime : null,
+        durationMinutes: data.countdownDurationMinutes || 30,
+        hasOpenTab: !!(data.countdownWindowId || countdownWindowId || data.countdownTabId || countdownTabId),
+      });
     });
     return true;
   } else if (message.action === 'launch_countdown_tab') {

@@ -55,16 +55,19 @@ export function App() {
   const [isControlsVisible, setIsControlsVisible] = useState(true);
   const [isCursorHidden, setIsCursorHidden] = useState(false);
 
-  // Tab mode state: 'screensaver' (Clock) or 'countdown' (Split-flap Timer)
+  // Tab mode state: 'countdown' (Split-flap Timer) or 'screensaver' (Clock)
   const [activeMode, setActiveMode] = useState<AppMode>(() => {
     if (typeof window !== 'undefined') {
       const p = new URLSearchParams(window.location.search);
       const tabParam = p.get('tab') || p.get('mode');
+      if (tabParam === 'screensaver' || tabParam === 'clock') {
+        return 'screensaver';
+      }
       if (tabParam === 'countdown' || tabParam === 'timer') {
         return 'countdown';
       }
     }
-    return 'screensaver';
+    return 'countdown';
   });
 
   const idleTimerRef = useRef<number | null>(null);
@@ -74,6 +77,13 @@ export function App() {
     if (typeof window === 'undefined') return false;
     const p = new URLSearchParams(window.location.search);
     return p.get('mode') === 'screensaver' || p.get('hideControls') === 'true';
+  });
+
+  // Check if opened with ?mode=countdown (e.g. from Chrome Extension countdown in a tab)
+  const [isExtensionCountdown, setIsExtensionCountdown] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const p = new URLSearchParams(window.location.search);
+    return p.get('mode') === 'countdown';
   });
 
   // Sync settings with chrome.storage if running inside Chrome Extension
@@ -200,10 +210,73 @@ export function App() {
     }
   }, []);
 
+  // Helper to reliably close the extension countdown tab and keep countdown tracking on icon badge
+  const closeCountdownTab = useCallback(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const chromeObj = (window as unknown as { chrome?: any }).chrome;
+    if (chromeObj?.runtime?.sendMessage) {
+      chromeObj.runtime.sendMessage({ action: 'close_countdown_tab' });
+    }
+    try {
+      window.close();
+    } catch {
+      // ignore
+    }
+    if (!chromeObj?.runtime?.id) {
+      setIsExtensionCountdown(false);
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('mode');
+        window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
+
   // When countdown completes, transition to screensaver
   const handleCountdownComplete = useCallback(() => {
     setActiveMode('screensaver');
   }, []);
+
+  // In countdown tab mode: mouse movement or keypress closes the tab,
+  // and countdown continues running on the extension icon badge!
+  useEffect(() => {
+    if (!isExtensionCountdown) return;
+
+    let moveCount = 0;
+    const startTime = Date.now();
+
+    const handleCountdownActivity = (e: Event) => {
+      // Escape key closes immediately
+      if ((e as KeyboardEvent).key === 'Escape' || (e as KeyboardEvent).code === 'Escape') {
+        closeCountdownTab();
+        return;
+      }
+
+      // Grace period of 800ms
+      if (Date.now() - startTime < 800) return;
+
+      if (e.type === 'mousemove') {
+        moveCount++;
+        if (moveCount < 6) return;
+      }
+
+      closeCountdownTab();
+    };
+
+    window.addEventListener('mousemove', handleCountdownActivity);
+    window.addEventListener('keydown', handleCountdownActivity);
+    window.addEventListener('mousedown', handleCountdownActivity);
+    window.addEventListener('touchstart', handleCountdownActivity);
+
+    return () => {
+      window.removeEventListener('mousemove', handleCountdownActivity);
+      window.removeEventListener('keydown', handleCountdownActivity);
+      window.removeEventListener('mousedown', handleCountdownActivity);
+      window.removeEventListener('touchstart', handleCountdownActivity);
+    };
+  }, [isExtensionCountdown, closeCountdownTab]);
 
   // Extension screensaver: auto-close when configured duration expires
   useEffect(() => {
@@ -338,34 +411,25 @@ export function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isExtensionScreensaver, isSettingsOpen, isInfoOpen, settings.format, handleUpdateSettings]);
 
+  const isFullScreenScreensaverMode = isExtensionScreensaver || isExtensionCountdown;
+
   return (
     <div
       className={`fliqlo-app theme-${settings.backgroundTheme} text-${settings.textColorTheme} font-${settings.fontFamily} ${
-        isExtensionScreensaver ? 'is-screensaver' : ''
+        isFullScreenScreensaverMode ? 'is-screensaver' : ''
       } ${
         isCursorHidden ? 'hide-cursor' : ''
       }`}
       onMouseMove={handleUserActivity}
       onClick={handleUserActivity}
     >
-      {/* Mode Navigation Tabs (Screensaver vs Countdown) */}
-      {!isExtensionScreensaver && (
+      {/* Mode Navigation Tabs (Countdown vs Screensaver) */}
+      {!isFullScreenScreensaverMode && (
         <nav
           className={`mode-tabs-bar ${isControlsVisible || isSettingsOpen || isInfoOpen ? '' : 'hidden'}`}
           role="tablist"
-          aria-label="Clock and screensaver modes"
+          aria-label="Countdown and screensaver modes"
         >
-          <button
-            type="button"
-            className={`mode-tab-btn ${activeMode === 'screensaver' ? 'active' : ''}`}
-            onClick={() => setActiveMode('screensaver')}
-            role="tab"
-            aria-selected={activeMode === 'screensaver'}
-            title="Screensaver Clock (Press C to switch)"
-          >
-            <Clock size={15} aria-hidden="true" />
-            <span>Screensaver</span>
-          </button>
           <button
             type="button"
             className={`mode-tab-btn ${activeMode === 'countdown' ? 'active' : ''}`}
@@ -377,22 +441,33 @@ export function App() {
             <Hourglass size={15} aria-hidden="true" />
             <span>Countdown</span>
           </button>
+          <button
+            type="button"
+            className={`mode-tab-btn ${activeMode === 'screensaver' ? 'active' : ''}`}
+            onClick={() => setActiveMode('screensaver')}
+            role="tab"
+            aria-selected={activeMode === 'screensaver'}
+            title="Screensaver Clock (Press C to switch)"
+          >
+            <Clock size={15} aria-hidden="true" />
+            <span>Screensaver</span>
+          </button>
         </nav>
       )}
 
-      {/* Flip Clock Display or Flip Countdown Display */}
-      {activeMode === 'screensaver' ? (
-        <FlipClock settings={settings} />
-      ) : (
+      {/* Flip Countdown Display or Flip Clock Display */}
+      {activeMode === 'countdown' ? (
         <FlipCountdown
           settings={settings}
           onComplete={handleCountdownComplete}
-          isVisible={isControlsVisible || isSettingsOpen || isInfoOpen}
+          isVisible={!isFullScreenScreensaverMode && (isControlsVisible || isSettingsOpen || isInfoOpen)}
         />
+      ) : (
+        <FlipClock settings={settings} />
       )}
 
       {/* Bottom Bar: hidden if extension screensaver mode requested without controls, or when idle */}
-      {!isExtensionScreensaver && (
+      {!isFullScreenScreensaverMode && (
         <BottomBar
           onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenInfo={() => setIsInfoOpen(true)}

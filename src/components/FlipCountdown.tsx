@@ -28,17 +28,57 @@ export const FlipCountdown: React.FC<FlipCountdownProps> = ({
   onComplete,
   isVisible = true,
 }) => {
-  // By default: 2 hours (120 minutes = 7200 seconds)
-  const DEFAULT_DURATION = 120 * 60;
+  // By default: 30 minutes (30 * 60 = 1800 seconds)
+  const DEFAULT_DURATION = 30 * 60;
 
-  const [duration, setDuration] = useState<number>(DEFAULT_DURATION);
-  const [remainingSeconds, setRemainingSeconds] = useState<number>(DEFAULT_DURATION);
-  const [isRunning, setIsRunning] = useState<boolean>(false);
+  // Check URL parameters for custom initial duration or end time (e.g. ?duration=120 or ?endTime=123456789)
+  const initialConfig = (() => {
+    let dur = DEFAULT_DURATION;
+    let rem = DEFAULT_DURATION;
+    let running = false;
+    let endTs: number | null = null;
+
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      const endTimeParam = p.get('endTime');
+      const durationParam = p.get('duration');
+      const modeParam = p.get('mode');
+
+      if (endTimeParam) {
+        const parsedEnd = parseInt(endTimeParam, 10);
+        if (!isNaN(parsedEnd) && parsedEnd > Date.now()) {
+          rem = Math.max(0, Math.ceil((parsedEnd - Date.now()) / 1000));
+          dur = rem;
+          running = true;
+          endTs = parsedEnd;
+        }
+      } else if (durationParam) {
+        const parsedMins = parseInt(durationParam, 10);
+        if (!isNaN(parsedMins) && parsedMins > 0) {
+          dur = parsedMins * 60;
+          rem = dur;
+        }
+      }
+
+      if (modeParam === 'countdown') {
+        running = true;
+        if (!endTs) {
+          endTs = Date.now() + rem * 1000;
+        }
+      }
+    }
+
+    return { dur, rem, running, endTs };
+  })();
+
+  const [duration, setDuration] = useState<number>(initialConfig.dur);
+  const [remainingSeconds, setRemainingSeconds] = useState<number>(initialConfig.rem);
+  const [isRunning, setIsRunning] = useState<boolean>(initialConfig.running);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [hasFinished, setHasFinished] = useState<boolean>(false);
   const [autoStartScreensaver, setAutoStartScreensaver] = useState<boolean>(true);
 
-  const endTimeRef = useRef<number | null>(null);
+  const endTimeRef = useRef<number | null>(initialConfig.endTs);
 
   // Toggle Start / Pause
   const handleToggleStart = useCallback(() => {
@@ -195,13 +235,15 @@ export const FlipCountdown: React.FC<FlipCountdownProps> = ({
       }}
     >
       {/* Exact same split-flap card styling as the screensaver */}
-      <div className="flip-clock flip-countdown">
-        {/* Hours Card */}
-        <FlipUnit
-          value={hourDisplay}
-          soundEnabled={isRunning && settings.soundEnabled}
-          soundVolume={settings.soundVolume}
-        />
+      <div className={`flip-clock flip-countdown ${hours > 0 ? 'has-hours' : 'minutes-only'}`}>
+        {/* Hours Card: displayed only when hours > 0 (showing 2 flip clocks for MM:SS, 3 flip clocks when hours come) */}
+        {hours > 0 && (
+          <FlipUnit
+            value={hourDisplay}
+            soundEnabled={isRunning && settings.soundEnabled}
+            soundVolume={settings.soundVolume}
+          />
+        )}
 
         {/* Minutes Card */}
         <FlipUnit
